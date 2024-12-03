@@ -40,23 +40,24 @@ import matplotlib.pyplot as plt
 from datetime import date
 
 
-def create_feature_indexes(input_path, output_path, resolution):
-    b03_file = glob.glob(f"{input_path}/B03_{resolution}.jp2")
+def create_feature_indexes1(input_path, output_path, resolution):
+    print(f"create_feature_indexes|input_path:{input_path}|output_path:{output_path}")
+    b03_file = glob.glob(f"{input_path}/B03_{resolution}m.jp2")
     with rasterio.open(b03_file[0]) as b03_band:
         B03 = b03_band.read(1)
-    b04_file = glob.glob(f"{input_path}/B04_{resolution}.jp2")
+    b04_file = glob.glob(f"{input_path}/B04_{resolution}m.jp2")
     with rasterio.open(b04_file[0]) as b04_band:
         B04 = b04_band.read(1)
-    b05_file = glob.glob(f"{input_path}/B05_{resolution}.jp2")
+    b05_file = glob.glob(f"{input_path}/B05_{resolution}m.jp2")
     with rasterio.open(b05_file[0]) as b05_band:
         B05 = b05_band.read(1)
-    b06_file = glob.glob(f"{input_path}/B06_{resolution}.jp2")
+    b06_file = glob.glob(f"{input_path}/B06_{resolution}m.jp2")
     with rasterio.open(b06_file[0]) as b06_band:
         B06 = b06_band.read(1)
-    b08_file = glob.glob(f"{input_path}/B08_{resolution}.jp2")
+    b08_file = glob.glob(f"{input_path}/B08_{resolution}m.jp2")
     with rasterio.open(b08_file[0]) as b08_band:
         B08 = b08_band.read(1)
-    b11_file = glob.glob(f"{input_path}/B11_{resolution}.jp2")
+    b11_file = glob.glob(f"{input_path}/B11_{resolution}m.jp2")
     with rasterio.open(b11_file[0]) as b11_band:
         B11 = b11_band.read(1)
 
@@ -83,10 +84,53 @@ def create_feature_indexes(input_path, output_path, resolution):
     create_feature_index_image(nddi, "NDDI", b04_band.crs, b04_band.transform, output_path)
     plot_feature_indexes(ndvi, ndwi, ndbi, nddi)
 
+def create_feature_indexes(input_path, output_path, resolution):
+    print(f"create_feature_indexes|input_path:{input_path}|output_path:{output_path}")
+    b03_file = glob.glob(f"{input_path}/B03_{resolution}m.tiff")
+    with rasterio.open(b03_file[0]) as b03_band:
+        B03 = b03_band.read(1)
+    b04_file = glob.glob(f"{input_path}/B04_{resolution}m.tiff")
+    with rasterio.open(b04_file[0]) as b04_band:
+        B04 = b04_band.read(1)
+    b05_file = glob.glob(f"{input_path}/B05_{resolution}m.tiff")
+    with rasterio.open(b05_file[0]) as b05_band:
+        B05 = b05_band.read(1)
+    b06_file = glob.glob(f"{input_path}/B06_{resolution}m.tiff")
+    with rasterio.open(b06_file[0]) as b06_band:
+        B06 = b06_band.read(1)
+    b08_file = glob.glob(f"{input_path}/B08_{resolution}m.tiff")
+    with rasterio.open(b08_file[0]) as b08_band:
+        B08 = b08_band.read(1)
+    b11_file = glob.glob(f"{input_path}/B11_{resolution}m.tiff")
+    with rasterio.open(b11_file[0]) as b11_band:
+        B11 = b11_band.read(1)
+
+    print(f"B03 shape: {B03.shape}")
+    print(f"B04 shape: {B04.shape}")
+    print(f"B05 shape: {B05.shape}")
+    print(f"B06 shape: {B06.shape}")
+    print(f"B08 shape: {B08.shape}")
+    print(f"B11 shape: {B11.shape}")
+
+    ndvi = abs((B08 - B04) / (B08 + B04))
+    create_feature_index_image(ndvi, "NDVI", b04_band.crs, b04_band.transform, output_path)
+
+    ndwi = abs((B03 - B08) / (B03 + B08))
+    create_feature_index_image(ndwi, "NDWI", b03_band.crs, b03_band.transform, output_path)
+
+    ndbi = abs((B06 - B05) / (B06 + B05))
+    create_feature_index_image(ndbi, "NDBI", b05_band.crs, b05_band.transform, output_path)
+
+    # ndui = abs((B11 - B03) / (B11 + B03))
+    # create_feature_index_image(ndui, "NDUI", b03_band.crs, b03_band.transform, output_path)
+
+    nddi = abs((ndvi - ndwi) / (ndvi + ndwi))
+    create_feature_index_image(nddi, "NDDI", b04_band.crs, b04_band.transform, output_path)
+    plot_feature_indexes(ndvi, ndwi, ndbi, nddi)
 
 def create_feature_index_image(data, feature_name, crs, transform, output_path):
     print(f"{feature_name} : {feature_name}")
-    with rasterio.open(f"{output_path}/{feature_name}.tif", 'w',
+    with rasterio.open(f"{output_path}/{feature_name}.tiff", 'w',
         driver='GTiff',
         height=data.shape[0],
         width=data.shape[1],
@@ -110,6 +154,7 @@ def perform_feature_extraction(input_dir, resolution):
     roi_dir = f"{input_dir}/roi"
     feature_dir = f"{input_dir}/features"
     os.makedirs(feature_dir, exist_ok=True)
+    print(f"perform_feature_extraction|roi_dir:{roi_dir}|feature_dir:{feature_dir}")
     create_feature_indexes(roi_dir, feature_dir, resolution)
 
 

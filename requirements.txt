@@ -1,9 +1,9 @@
 pandas
 numpy
-geopandas==1.0.1
-shapely==2.0.6
+geopandas
+shapely
 requests
 sentinelsat
-rasterio==1.3.10
+rasterio
 pyyaml
 matplotlib
