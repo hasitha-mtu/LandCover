@@ -9,6 +9,8 @@ from matplotlib.colors import ListedColormap
 from sentinelsat import read_geojson
 from shapely.geometry import shape
 from rasterio.mask import mask
+import geopandas as gpd
+from datetime import date
 
 
 def load_cmap(file_path = "config/color_map.json"):
@@ -36,13 +38,16 @@ def load_cmap(file_path = "config/color_map.json"):
 
 def view_tiff(file_path, title="Land Cover"):
     tiff = rasterio.open(file_path)
+    print(f"view_tiff|tiff:{tiff}")
     fig, ax = plt.subplots(figsize=(20, 20))
     cmap, legend = load_cmap()
+    print(f"view_tiff|cmap:{cmap}")
     ax.legend(**legend)
     rasterio.plot.show(tiff, cmap=cmap, ax=ax, title=title)
+    print(f"view_tiff|cmap:{cmap}")
     plt.show()
 
-def clip_tiff(tiff_path, polygon_path):
+def clip_tiff(tiff_path, output_path, polygon_path):
     roi_polygon = get_polygon(polygon_path)
     print(f"roi_polygon: {roi_polygon}")
     with rasterio.open(tiff_path) as src:
@@ -53,7 +58,7 @@ def clip_tiff(tiff_path, polygon_path):
                          "width": out_image.shape[2],
                          "transform": out_transform})
 
-        with rasterio.open('clipped_raster.tif', 'w', **out_meta) as dest:
+        with rasterio.open(output_path, 'w', **out_meta) as dest:
             dest.write(out_image)
 
 
@@ -86,13 +91,34 @@ def get_polygon(path):
     polygon = shape(geometry_data)
     return polygon
 
+def read_shape_file(file_path):
+    gdf = gpd.read_file(file_path)
+    print(gdf.head())
+
+# if __name__ == "__main__":
+#     file_path = "data/land_cover/cork/catchments_cata_package_june2022/Shapefiles/WFD_Catchments.shp"
+#     read_shape_file(file_path)
+
 if __name__ == "__main__":
-    # file_path_2006 = "data/land_cover/2006/U2012_CLC2006_V2020_20u1.tif"
-    # view_tiff(file_path_2006, 2006)
-    # file_path_2012 = "data/land_cover/2012/U2018_CLC2012_V2020_20u1_raster100m.tif"
-    # view_tiff(file_path_2012, 2012)
-    # file_path = "data/land_cover/cork/U2018_CLC2018_V2020_20u1.tif"
-    # file_path = "data/land_cover/cork/U2012_CLC2006_V2020_20u1.tif"
-    # geo_json = "config/cork.geojson"
-    # clip_tiff(file_path, geo_json)
-    view_tiff("data/land_cover/cork/clipped_raster.tif")
+    collection_name = "SENTINEL-2"
+    resolution = 10  # Define the target resolution (e.g., 10 meters)
+    today_string = date.today().strftime("%Y-%m-%d")
+    download_dir = f"data/{collection_name}/{today_string}"
+    print(f"download_dir : {download_dir}")
+    stacked_dir = f"{download_dir}/stacked"
+    out_file = f"{stacked_dir}/stacked_bands.tiff"
+    tiff = rasterio.open(out_file)
+    print(f"view_tiff|tiff:{tiff}")
+    rasterio.plot.show(tiff)
+    plt.show()
+
+# if __name__ == "__main__":
+#     # file_path_2006 = "data/land_cover/2006/U2012_CLC2006_V2020_20u1.tif"
+#     # view_tiff(file_path_2006, 2006)
+#     # file_path_2012 = "data/land_cover/2012/U2018_CLC2012_V2020_20u1_raster100m.tif"
+#     # view_tiff(file_path_2012, 2012)
+#     file_path = "data/land_cover/cork/U2018_CLC2018_V2020_20u1.tif"
+#     geo_json = "config/cork.geojson"
+#     output_path = "data/land_cover/cork/clipped_raster.tif"
+#     clip_tiff(file_path, output_path, geo_json)
+#     view_tiff("data/land_cover/cork/clipped_raster.tif")

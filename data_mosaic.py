@@ -15,7 +15,6 @@ from utils import get_parent_directories, get_polygon
 import glob
 from rasterio.plot import show
 
-
 def merge_file(tiff_paths, output_file, DEBUG):
     """
     We're mergin the raster images.
@@ -154,6 +153,32 @@ def crop_image_files(download_dir, resolution, polygon_path):
         output_file = re.sub("reprojected", "roi", merged_file)
         crop_image(merged_file, output_file, selected_area, True)
 
+def stack_bands_together(input_dir, resolution, band_list):
+    roi_dir = f"{input_dir}/roi"
+    band_rasters = []
+    for band in band_list:
+        band_file = glob.glob(f"{roi_dir}/{band}_{resolution}m.tiff")
+        band_rasters = band_rasters + band_file
+    print(band_rasters)
+    with rasterio.open(band_rasters[0]) as ds:
+        metadata = ds.profile
+        metadata.update({"count": len(band_rasters)})
+        stacked_dir = f"{input_dir}/stacked"
+        os.makedirs(stacked_dir, exist_ok=True)
+        out_file = f"{stacked_dir}/stacked_bands.tiff"
+        with rasterio.open(out_file, 'w', **metadata) as dest:
+            for i, band_file in enumerate(band_rasters):
+                band_data = rasterio.open(band_file)
+                dest.write(band_data.read(1),i+1)
+        print(f"Stacked file created {out_file}")
+
+if __name__ == "__main__":
+    today_string = date.today().strftime("%Y-%m-%d")
+    collection_name = "SENTINEL-2"  # Sentinel satellite
+    download_dir = f"data/{collection_name}/{today_string}"
+    resolution = 10
+    stack_bands_together(download_dir, resolution, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
+
 # if __name__ == "__main__":
 #     today_string = date.today().strftime("%Y-%m-%d")
 #     collection_name = "SENTINEL-2"  # Sentinel satellite
@@ -161,18 +186,19 @@ def crop_image_files(download_dir, resolution, polygon_path):
 #     resolution = 10  # Define the target resolution (e.g., 10 meters)
 #     crop_image_files(download_dir, resolution, 'config/Kenmare-map.geojson')
 
-if __name__ == "__main__":
-    today_string = date.today().strftime("%Y-%m-%d")
-    collection_name = "SENTINEL-2"  # Sentinel satellite
-    download_dir = f"data/{collection_name}/{today_string}"
-    merged_band_dir = f"data/{collection_name}/{today_string}/merged"
-    band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
-                 'TCI', 'WVP']
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    perform_jp2_to_tiff_conversion(download_dir)
-    merge_files(download_dir, resolution, band_list, False)
-    re_project_files(download_dir, resolution)
-    crop_image_files(download_dir, resolution, 'config/mallow.geojson')
+# if __name__ == "__main__":
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     collection_name = "SENTINEL-2"  # Sentinel satellite
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     merged_band_dir = f"data/{collection_name}/{today_string}/merged"
+#     band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
+#                  'TCI', 'WVP']
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     perform_jp2_to_tiff_conversion(download_dir)
+#     merge_files(download_dir, resolution, band_list, False)
+#     re_project_files(download_dir, resolution)
+#     crop_image_files(download_dir, resolution, 'config/mallow.geojson')
+#     stack_bands_together(download_dir, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
 
 
