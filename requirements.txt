@@ -1,7 +1,7 @@
 pandas
 numpy
 geopandas==1.0.1
-shapely==2.0.5
+shapely==2.0.6
 requests
 sentinelsat
 rasterio==1.3.10
