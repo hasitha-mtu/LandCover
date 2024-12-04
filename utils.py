@@ -10,10 +10,11 @@ from sentinelsat import read_geojson
 from shapely.geometry import shape
 from rasterio.mask import mask
 import geopandas as gpd
+import numpy as np
 from datetime import date
 
-
 def load_cmap(file_path = "config/color_map.json"):
+    # Color map is https://collections.sentinel-hub.com/corine-land-cover/readme.html
     lc = json.load(open(file_path))
     lc_df = pd.DataFrame(lc)
     # lc_df["palette"] = "#" + lc_df["palette"]
@@ -39,7 +40,7 @@ def load_cmap(file_path = "config/color_map.json"):
 def view_tiff(file_path, title="Land Cover"):
     tiff = rasterio.open(file_path)
     print(f"view_tiff|tiff:{tiff}")
-    fig, ax = plt.subplots(figsize=(20, 20))
+    fig, ax = plt.subplots(figsize=(10, 10))
     cmap, legend = load_cmap()
     print(f"view_tiff|cmap:{cmap}")
     ax.legend(**legend)
@@ -83,7 +84,7 @@ def get_parent_directories(download_dir):
         dir_list.append(parent_dir_path)
     return dir_list
 
-def get_polygon(path):
+def get_polygon(path = "config/cork.geojson"):
     geojson = read_geojson(path)
     polygon_jsons = geojson["features"]
     polygon_json = polygon_jsons[0]
@@ -95,9 +96,33 @@ def read_shape_file(file_path):
     gdf = gpd.read_file(file_path)
     print(gdf.head())
 
+def read_raster_file(file_path):
+    view_tiff(file_path, title="Land Cover")
+    with rasterio.open(file_path) as src:
+        # Read the raster data
+        band1 = src.read(1)
+        print(f"read_raster_file|band1:{band1}")
+        print(f"read_raster_file|band1 shape:{band1.shape}")
+        # Get metadata
+        crs = src.crs
+        print(f"read_raster_file|crs:{crs}")
+        transform = src.transform
+        print(f"read_raster_file|transform:{transform}")
+        # Print unique values and their counts
+        unique_values, counts = np.unique(band1, return_counts=True)
+        print(unique_values, counts)
+
+from tifffile import imread
+
+def read_raster(file_path):
+    image = imread(file_path)
+    print(image.shape)
+
 # if __name__ == "__main__":
-#     file_path = "data/land_cover/cork/catchments_cata_package_june2022/Shapefiles/WFD_Catchments.shp"
-#     read_shape_file(file_path)
+#     file_path = "data/land_cover/cork/clipped_raster.tif"
+#     read_raster(file_path)
+#     file_path = "data/SENTINEL-2/2024-12-03/stacked/stacked_bands.tiff"
+#     read_raster(file_path)
 
 if __name__ == "__main__":
     collection_name = "SENTINEL-2"

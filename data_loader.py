@@ -233,7 +233,7 @@ if __name__ == "__main__":
     today_string = today.strftime("%Y-%m-%d")
     yesterday = today - timedelta(days=10)
     yesterday_string = yesterday.strftime("%Y-%m-%d")
-    selected_area = get_polygon('config/mallow.geojson')
+    selected_area = get_polygon()
     collection_name = "SENTINEL-2"  # Sentinel satellite
     download_dir = f"data/{collection_name}/{today_string}"
     print(f"download_dir : {download_dir}")
