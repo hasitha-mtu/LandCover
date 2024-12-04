@@ -2,6 +2,11 @@ import rasterio
 import numpy as np
 from sklearn.cluster import KMeans
 
+from data_mosaic import crop_image
+from data_resampling import perform_resampling
+from utils import get_polygon
+
+
 def supervised_kmeans(image_file, ground_truth_file, num_clusters):
     """
     Performs supervised K-Means clustering on a remote sensing image.
@@ -42,12 +47,18 @@ def supervised_kmeans(image_file, ground_truth_file, num_clusters):
 
 if __name__ == "__main__":
     # Example usage:
-    image_file = 'your_image.tif'
-    ground_truth_file = 'ground_truth.tif'
+    image_file = '../data/SENTINEL-2/2024-12-04/features/NDDI.tiff'
+    ground_truth_file = '../data/land_cover/cork2/clipped_raster.tif'
     num_clusters = 5
 
-    classified_image = supervised_kmeans(image_file, ground_truth_file, num_clusters)
-
     # Write the classified image to a new GeoTIFF file
-    with rasterio.open('classified_image.tif', 'w', **src.meta) as dst:
+    perform_resampling("../data/land_cover/cork2/clipped_raster.tif",
+                       "../data/land_cover/cork2/resampled_clipped_raster.tif", 10)
+    selected_area = get_polygon(path = "../config/cork2.geojson")
+    crop_image("../data/land_cover/cork2/resampled_clipped_raster.tif", "../data/land_cover/cork2/resampled_cropped_raster.tif", selected_area, True)
+    classified_image = supervised_kmeans(image_file, ground_truth_file, num_clusters)
+    src = rasterio.open(ground_truth_file)
+    with rasterio.open('data/land_cover/cork2/classified_image.tif', 'w', **src.meta) as dst:
         dst.write(classified_image.astype(rasterio.uint8), 1)
+
+    # 258, 1540
