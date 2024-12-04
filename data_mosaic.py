@@ -130,7 +130,6 @@ def crop_image(input_file, output_file, aoi_footprint, debug):
     print(f"crop_image input_file:{input_file}")
     print(f"crop_image output_file:{output_file}")
     print(f"crop_image aoi_footprint:{aoi_footprint}")
-    view_tiff(input_file)
     with rasterio.open(input_file) as src:
         print(f"crop_image aoi_footprint:{aoi_footprint}")
         out_image, out_transform = rasterio.mask.mask(src, [aoi_footprint], crop=True)
