@@ -77,8 +77,8 @@ def create_feature_indexes1(input_path, output_path, resolution):
     ndbi = abs((B06 - B05) / (B06 + B05))
     create_feature_index_image(ndbi, "NDBI", b05_band.crs, b05_band.transform, output_path)
 
-    # ndui = abs((B11 - B03) / (B11 + B03))
-    # create_feature_index_image(ndui, "NDUI", b03_band.crs, b03_band.transform, output_path)
+    ndui = abs((B11 - B03) / (B11 + B03))
+    create_feature_index_image(ndui, "NDUI", b03_band.crs, b03_band.transform, output_path)
 
     nddi = abs((ndvi - ndwi) / (ndvi + ndwi))
     create_feature_index_image(nddi, "NDDI", b04_band.crs, b04_band.transform, output_path)
@@ -121,12 +121,12 @@ def create_feature_indexes(input_path, output_path, resolution):
     ndbi = abs((B06 - B05) / (B06 + B05))
     create_feature_index_image(ndbi, "NDBI", b05_band.crs, b05_band.transform, output_path)
 
-    # ndui = abs((B11 - B03) / (B11 + B03))
-    # create_feature_index_image(ndui, "NDUI", b03_band.crs, b03_band.transform, output_path)
+    ndui = abs((B11 - B03) / (B11 + B03))
+    create_feature_index_image(ndui, "NDUI", b03_band.crs, b03_band.transform, output_path)
 
     nddi = abs((ndvi - ndwi) / (ndvi + ndwi))
     create_feature_index_image(nddi, "NDDI", b04_band.crs, b04_band.transform, output_path)
-    plot_feature_indexes(ndvi, ndwi, ndbi, nddi)
+    plot_feature_indexes(ndvi, ndwi, ndbi, ndui, nddi)
 
 def create_feature_index_image(data, feature_name, crs, transform, output_path):
     print(f"{feature_name} : {feature_name}")
@@ -158,9 +158,9 @@ def perform_feature_extraction(input_dir, resolution):
     create_feature_indexes(roi_dir, feature_dir, resolution)
 
 
-def plot_feature_indexes(ndvi, ndwi, ndbi, nddi):
+def plot_feature_indexes(ndvi, ndwi, ndbi, ndui, nddi):
     # Create a figure with multiple subplots
-    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(15, 10))
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(15, 10))
 
     # Plot each index
     axes[0, 0].imshow(ndvi, cmap='viridis')
@@ -172,8 +172,11 @@ def plot_feature_indexes(ndvi, ndwi, ndbi, nddi):
     axes[1, 0].imshow(ndbi, cmap='YlGn')
     axes[1, 0].set_title('NDBI')
 
-    axes[1, 1].imshow(nddi, cmap='RdYlGn')
-    axes[1, 1].set_title('NDDI')
+    axes[1, 1].imshow(ndui, cmap='RdYlGn')
+    axes[1, 1].set_title('NDUI')
+
+    axes[2, 0].imshow(nddi, cmap='YlGn')
+    axes[2, 0].set_title('NDDI')
 
     # Adjust layout and display the plot
     plt.tight_layout()

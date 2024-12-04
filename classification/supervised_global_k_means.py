@@ -48,11 +48,11 @@ def supervised_kmeans(image_file, ground_truth_file, num_clusters):
 if __name__ == "__main__":
     # Example usage:
     image_file = '../data/SENTINEL-2/2024-12-04/features/NDDI.tiff'
-    ground_truth_file = '../data/land_cover/cork2/clipped_raster.tif'
+    ground_truth_file = '../data/land_cover/cork2/resampled_cropped_raster.tif'
     num_clusters = 5
 
     # Write the classified image to a new GeoTIFF file
-    perform_resampling("../data/land_cover/cork2/clipped_raster.tif",
+    perform_resampling("../data/land_cover/cork/U2012_CLC2006_V2020_20u1.tif",
                        "../data/land_cover/cork2/resampled_clipped_raster.tif", 10)
     selected_area = get_polygon(path = "../config/cork2.geojson")
     crop_image("../data/land_cover/cork2/resampled_clipped_raster.tif", "../data/land_cover/cork2/resampled_cropped_raster.tif", selected_area, True)

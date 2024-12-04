@@ -19,7 +19,7 @@ def get_input_files(dir_path, resolution, selected_bands, selected_features):
             image_shape = image_data.shape
             print(f"get_input_files|input_file:{input_file}")
             print(f"get_input_files|image_shape:{image_shape}")
-            view_tiff(input_file, title=input_file)
+            # view_tiff(input_file, title=input_file)
 
 def get_band_files(dir_path, resolution, selected_bands):
     band_file_path = f"{dir_path}/roi"
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"data/{collection_name}/{today_string}"
     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-    features = ['NDVI', 'NDWI', 'NDBI', 'NDDI']
+    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
     get_input_files(download_dir, resolution, bands, features)
     # shape_file = "data/land_cover/CLC18_IE_ITM/CLC18_IE_ITM.shp"
     # read_shape_files(shape_file)
