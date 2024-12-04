@@ -124,18 +124,25 @@ def read_raster(file_path):
 #     file_path = "data/SENTINEL-2/2024-12-03/stacked/stacked_bands.tiff"
 #     read_raster(file_path)
 
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     print(f"download_dir : {download_dir}")
+#     stacked_dir = f"{download_dir}/stacked"
+#     out_file = f"{stacked_dir}/stacked_bands.tiff"
+#     tiff = rasterio.open(out_file)
+#     print(f"view_tiff|tiff:{tiff}")
+#     rasterio.plot.show(tiff)
+#     plt.show()
+
 if __name__ == "__main__":
-    collection_name = "SENTINEL-2"
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today_string = date.today().strftime("%Y-%m-%d")
-    download_dir = f"data/{collection_name}/{today_string}"
-    print(f"download_dir : {download_dir}")
-    stacked_dir = f"{download_dir}/stacked"
-    out_file = f"{stacked_dir}/stacked_bands.tiff"
-    tiff = rasterio.open(out_file)
-    print(f"view_tiff|tiff:{tiff}")
-    rasterio.plot.show(tiff)
-    plt.show()
+    file_path = "data/land_cover/cork/U2018_CLC2018_V2020_20u1.tif"
+    geo_json = "config/cork2.geojson"
+    output_path = "data/land_cover/cork2/clipped_raster.tif"
+    clip_tiff(file_path, output_path, geo_json)
+    view_tiff("data/land_cover/cork2/clipped_raster.tif")
 
 # if __name__ == "__main__":
 #     # file_path_2006 = "data/land_cover/2006/U2012_CLC2006_V2020_20u1.tif"

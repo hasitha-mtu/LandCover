@@ -66,7 +66,7 @@ def resample_images(target_resolution, source_dir, resolution_list=None, band_li
                     band_images = get_image_for_the_band(image_dir, resolution, band)
                     if len(band_images) > 0:
                         perform_resampling(band_images[0], f"{resample_dir}/{band}_{target_resolution}m.jp2",
-                                           upscale_factor=resolution/resolution)
+                                           upscale_factor=resolution/target_resolution)
                         print(band_images[0])
 
 if __name__ == "__main__":
