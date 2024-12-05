@@ -25,9 +25,9 @@ def get_data_stack(dir_path):
     print(f"get_data_stack|input_files: {input_files}")
     return data_preprocessing.get_data_stack(input_files)
 
-def train_model(labels, normalized_stack):
+def train_model(labels, data_stack):
     # Example: Features = bands, Labels = land cover classes
-    X = normalized_stack.reshape(-1, len(normalized_stack))  # Flattened bands
+    X = data_stack.reshape(-1, len(data_stack))  # Flattened bands
     y = labels.flatten()  # Corresponding labels
     print(f"train_model|X:{X.shape}")
     print(f"train_model|y:{y.shape}")
@@ -37,8 +37,8 @@ def train_model(labels, normalized_stack):
     # Train model
     clf = RandomForestClassifier(n_estimators=100, random_state=42)
     clf.fit(X_train, y_train)
-    data_stack = get_data_stack(download_dir)
-    classified = clf.predict(X).reshape(data_stack.shape[:2])
+    normalized_stack = get_normalized_stack(download_dir)
+    classified = clf.predict(X).reshape(normalized_stack.shape[:2])
 
 
     cmap, legend = load_cmap(file_path = "../config/color_map.json")
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     ground_truth_file = "../data/land_cover/cork2/resampled_cropped_raster.tif"
     labels = get_labels(ground_truth_file)
     print(f"shape of labels {labels.shape}")
-    normalized_stack = get_normalized_stack(download_dir)
-    print(f"shape of normalized_stack {normalized_stack.shape}")
-    print(f"shape of normalized_stack {normalized_stack[0].shape}")
-    train_model(labels, normalized_stack)
+    data_stack = get_data_stack(download_dir)
+    print(f"shape of normalized_stack {data_stack.shape}")
+    print(f"shape of normalized_stack {data_stack[0].shape}")
+    train_model(labels, data_stack)
 
