@@ -122,14 +122,14 @@ def get_normalized_stack(file_paths):
     for file_path in file_paths:
         with rasterio.open(file_path) as src:
             bands_and_features.append(src.read(1))
-    return np.stack(bands_and_features)
+    return np.stack(bands_and_features, axis=-1)
 
 def get_data_stack(file_paths):
     bands_and_features = []
     for file_path in file_paths:
         with rasterio.open(file_path) as src:
             bands_and_features.append(src.read(1))
-    return np.stack(bands_and_features, axis=-1)
+    return np.stack(bands_and_features)
 
 def crop_shape_file(shape_file, geojson_file):
     shapefile = gpd.read_file(shape_file)
