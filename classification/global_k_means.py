@@ -9,6 +9,10 @@ import glob
 
 
 def global_kmeans(X, max_clusters, max_iter=100, tol=1e-4):
+    print(f"global_kmeans|X shape:{X.shape}")
+    # Check for NaN values
+    if np.isnan(X).any():
+        raise ValueError("NaN values remain in the input data!")
     """
     Global K-Means algorithm implementation.
 
@@ -45,10 +49,6 @@ def global_kmeans(X, max_clusters, max_iter=100, tol=1e-4):
     return cluster_labels, np.array(centroids)
 
 def run_kmeans(X, centroids, max_iter, tol):
-    # Check for NaN values
-    if np.isnan(X).any():
-        raise ValueError("NaN values remain in the input data!")
-
     """
     Refine centroids using K-Means iterative updates.
     """

@@ -9,6 +9,8 @@ import numpy as np
 import re
 import ntpath
 from utils import view_tiff
+import pandas as pd
+from pyproj import Transformer
 
 
 def get_input_files(dir_path, resolution = 10,
@@ -131,11 +133,36 @@ def get_data_stack(file_paths):
             bands_and_features.append(src.read(1))
     return np.stack(bands_and_features)
 
+def get_data_frame(file_paths, latlon_crs = 'epsg:4326'):
+    for file_path in file_paths:
+        with rasterio.open(file_path) as f:
+            zz = f.read(1)
+            x = np.linspace(f.bounds.left, f.bounds.right, f.shape[1])
+            y = np.linspace(f.bounds.bottom, f.bounds.top, f.shape[0])
+        xx, yy = np.meshgrid(x, y)
+        df = pd.DataFrame({
+            'x': xx.flatten(),
+            'y': yy.flatten(),
+            'value': zz.flatten(),
+        })
+        transformer = Transformer.from_crs(f.crs, latlon_crs, always_xy=False)
+        df['lat'], df['lon'] = transformer.transform(xx=df.x, yy=df.y)
+        df.drop(columns=['x', 'y'], inplace=True)
+        print(df.head())
+
 def crop_shape_file(shape_file, geojson_file):
     shapefile = gpd.read_file(shape_file)
     geojson = gpd.read_file(geojson_file)
     cropped_shapefile = gpd.overlay(shapefile, geojson, how='intersection')
     cropped_shapefile.to_file('cropped_shapefile.shp')
+
+if __name__ == "__main__":
+    collection_name = "SENTINEL-2"
+    resolution = 10  # Define the target resolution (e.g., 10 meters)
+    today_string = date.today().strftime("%Y-%m-%d")
+    download_dir = f"data/{collection_name}/{today_string}"
+    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
+    get_data_frame(input_files)
 
 # if __name__ == "__main__":
 #     input_shape_file = "data/land_cover/U2018_CLC2018_V2020_20u1.shp/U2018_CLC2018_V2020_20u1.shp"
@@ -144,15 +171,15 @@ def crop_shape_file(shape_file, geojson_file):
 #     crop_shape_file = "data/land_cover/cork2/shape_file/cropped_shapefile.shp"
 #     read_shape_files(crop_shape_file)
 
-if __name__ == "__main__":
-    collection_name = "SENTINEL-2"
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today_string = date.today().strftime("%Y-%m-%d")
-    download_dir = f"data/{collection_name}/{today_string}"
-    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
-    ground_truth_file = "data/land_cover/cork2/resampled_cropped_raster.tif"
-    view_shape_of_all_files(download_dir, resolution, bands, features, ground_truth_file)
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+#     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+#     ground_truth_file = "data/land_cover/cork2/resampled_cropped_raster.tif"
+#     view_shape_of_all_files(download_dir, resolution, bands, features, ground_truth_file)
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
