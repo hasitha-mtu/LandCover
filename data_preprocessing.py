@@ -156,13 +156,13 @@ def crop_shape_file(shape_file, geojson_file):
     cropped_shapefile = gpd.overlay(shapefile, geojson, how='intersection')
     cropped_shapefile.to_file('cropped_shapefile.shp')
 
-if __name__ == "__main__":
-    collection_name = "SENTINEL-2"
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today_string = date.today().strftime("%Y-%m-%d")
-    download_dir = f"data/{collection_name}/{today_string}"
-    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
-    get_data_frame(input_files)
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
+#     get_data_frame(input_files)
 
 # if __name__ == "__main__":
 #     input_shape_file = "data/land_cover/U2018_CLC2018_V2020_20u1.shp/U2018_CLC2018_V2020_20u1.shp"
@@ -181,21 +181,21 @@ if __name__ == "__main__":
 #     ground_truth_file = "data/land_cover/cork2/resampled_cropped_raster.tif"
 #     view_shape_of_all_files(download_dir, resolution, bands, features, ground_truth_file)
 
-# if __name__ == "__main__":
-#     collection_name = "SENTINEL-2"
-#     resolution = 10  # Define the target resolution (e.g., 10 meters)
-#     today_string = date.today().strftime("%Y-%m-%d")
-#     download_dir = f"data/{collection_name}/{today_string}"
-#     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-#     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
-#     # get_input_files(download_dir, resolution, bands, features)
-#     ground_truth_file = "data/land_cover/cork2/resampled_cropped_raster.tif"
-#     resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
-#
-#     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
-#     for input_file in input_files:
-#         with rasterio.open(input_file) as src:
-#             image_data = src.read()
-#             image_shape = image_data.shape
-#             print(f"get_input_files|input_file:{input_file}")
-#             print(f"get_input_files|image_shape:{image_shape}")
+if __name__ == "__main__":
+    collection_name = "SENTINEL-2"
+    resolution = 10  # Define the target resolution (e.g., 10 meters)
+    today_string = date.today().strftime("%Y-%m-%d")
+    download_dir = f"data/{collection_name}/{today_string}"
+    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+    # get_input_files(download_dir, resolution, bands, features)
+    ground_truth_file = "data/land_cover/cork2/resampled_cropped_raster.tif"
+    resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
+
+    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
+    for input_file in input_files:
+        with rasterio.open(input_file) as src:
+            image_data = src.read()
+            image_shape = image_data.shape
+            print(f"get_input_files|input_file:{input_file}")
+            print(f"get_input_files|image_shape:{image_shape}")

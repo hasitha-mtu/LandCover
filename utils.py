@@ -84,7 +84,7 @@ def get_parent_directories(download_dir):
         dir_list.append(parent_dir_path)
     return dir_list
 
-def get_polygon(path = "config/cork2.geojson"):
+def get_polygon(path = "config/test_map.geojson"):
     geojson = read_geojson(path)
     polygon_jsons = geojson["features"]
     polygon_json = polygon_jsons[0]
@@ -139,7 +139,7 @@ def read_raster(file_path):
 
 if __name__ == "__main__":
     file_path = "data/land_cover/cork/U2018_CLC2018_V2020_20u1.tif"
-    geo_json = "config/cork2.geojson"
+    geo_json = "config/test_map.geojson"
     output_path = "data/land_cover/cork2/clipped_raster.tif"
     clip_tiff(file_path, output_path, geo_json)
     view_tiff("data/land_cover/cork2/clipped_raster.tif")
