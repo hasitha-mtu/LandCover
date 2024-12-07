@@ -7,5 +7,3 @@ sentinelsat
 rasterio
 pyyaml
 matplotlib
-gdal
-pyshp
