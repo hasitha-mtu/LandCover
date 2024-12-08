@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from utils import get_parent_directories, get_polygon, view_tiff
 import glob
 from rasterio.plot import show
+from rasterio.merge import merge
 
 """
 Explanation on preprocessing for sentinal 2 L2 data
@@ -21,10 +22,6 @@ https://sentiwiki.copernicus.eu/web/s2-processing
 """
 
 def merge_file(tiff_paths, output_file, DEBUG):
-    """
-    We're mergin the raster images.
-    """
-
     raster_list = [rasterio.open(f, mode='r', driver="GTiff") for f in tiff_paths]
     merged_data, out_trans = rasterio.merge.merge(raster_list)
 
@@ -48,6 +45,24 @@ def merge_file(tiff_paths, output_file, DEBUG):
 
     with rasterio.open(output_file, mode="w", **merged_meta) as dest:
         dest.write(merged_data)
+
+def mosaic_images(image_paths, output_file, DEBUG):
+    src_files = [rasterio.open(fp) for fp in image_paths]
+    mosaic, out_transform = merge(src_files)
+    if DEBUG:
+        fig, ax = plt.subplots(figsize=(14, 14))
+        show(mosaic, cmap='terrain', ax=ax)
+        plt.show()
+    out_meta = src_files[0].meta.copy()
+    out_meta.update({"driver": "GTiff",
+                      "height": mosaic.shape[1],
+                      "width": mosaic.shape[2],
+                      "transform": out_transform})
+    if DEBUG:
+        for x in [x.meta for x in src_files]:
+            pprint(x)
+    with rasterio.open(output_file, "w", **out_meta) as dest:
+        dest.write(mosaic)
 
 def convert_jp2_to_tiff(path):
     print("Converting " + path)
@@ -115,7 +130,7 @@ def merge_files(download_dir, resolution, band_list, debug):
             if os.path.isfile(tiff_path):
                 tiff_path_list.append(tiff_path)
         print(f"Band {band}m tiff files : {tiff_path_list}")
-        merge_file(tiff_path_list, f"{merged_dir}/{band}_{resolution}m.tiff", debug)
+        mosaic_images(tiff_path_list, f"{merged_dir}/{band}_{resolution}m.tiff", debug)
 
 def re_project_files(download_dir, resolution,  dst_crs='EPSG:4326'):
     reprojected_dir = f"{download_dir}/reprojected"
@@ -126,22 +141,21 @@ def re_project_files(download_dir, resolution,  dst_crs='EPSG:4326'):
         output_file = re.sub("merged", "reprojected", merged_file)
         re_project_file(merged_file, output_file, dst_crs)
 
-def crop_image(input_file, output_file, aoi_footprint, debug):
+
+def crop_image(input_file, output_file, polygon, debug):
     print(f"crop_image input_file:{input_file}")
     print(f"crop_image output_file:{output_file}")
-    print(f"crop_image aoi_footprint:{aoi_footprint}")
+    print(f"crop_image polygon:{polygon}")
     with rasterio.open(input_file) as src:
-        print(f"crop_image aoi_footprint:{aoi_footprint}")
-        out_image, out_transform = rasterio.mask.mask(src, [aoi_footprint], crop=True)
-        out_meta = src.meta
+        out_image, out_transform = rasterio.mask.mask(src, [polygon], crop=True)
+        out_meta = src.meta.copy()
         out_meta.update({"driver": "GTiff",
                          "height": out_image.shape[1],
                          "width": out_image.shape[2],
-                         "transform": out_transform,
-                         })
+                         "transform": out_transform})
+
         with rasterio.open(output_file, "w", **out_meta) as dest:
             dest.write(out_image)
-
             if debug:
                 fig, ax = plt.subplots(figsize=(14, 14))
                 show(out_image, cmap='terrain', ax=ax)
@@ -201,9 +215,24 @@ if __name__ == "__main__":
     resolution = 10  # Define the target resolution (e.g., 10 meters)
     perform_jp2_to_tiff_conversion(download_dir)
     merge_files(download_dir, resolution, band_list, False)
+
     re_project_files(download_dir, resolution)
     crop_image_files(download_dir, resolution)
     stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
+
+# if __name__ == "__main__":
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     collection_name = "SENTINEL-2"  # Sentinel satellite
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     merged_band_dir = f"data/{collection_name}/{today_string}/merged"
+#     band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
+#                  'TCI', 'WVP']
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     perform_jp2_to_tiff_conversion(download_dir)
+#     merge_files(download_dir, resolution, band_list, False)
+#     re_project_files(download_dir, resolution)
+#     crop_image_files(download_dir, resolution)
+#     stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
 
 
