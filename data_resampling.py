@@ -16,7 +16,7 @@ def perform_resampling(input_file, output_file, upscale_factor = 2):
                 int(dataset.height * upscale_factor),
                 int(dataset.width * upscale_factor)
             ),
-            resampling=Resampling.bilinear)
+            resampling=Resampling.nearest)
         transform_dataset = dataset.transform * dataset.transform.scale(
             (dataset.width / resampled_data.shape[-1]),
             (dataset.height / resampled_data.shape[-2])
