@@ -147,20 +147,20 @@ def crop_image(input_file, output_file, polygon, debug):
     print(f"crop_image output_file:{output_file}")
     print(f"crop_image polygon:{polygon}")
     with rasterio.open(input_file) as src:
-        data = src.read(1)
+        print(f"crop_image input.shape:{src.read(1).shape}")
         out_image, out_transform = rasterio.mask.mask(src, [polygon], crop=True)
         out_meta = src.meta.copy()
-        print(f"crop_image out_meta:{out_meta}")
         out_meta.update({"driver": "GTiff",
-                         "height": data.shape[0],
-                         "width": data.shape[1],
+                         "height": out_image.shape[1],
+                         "width": out_image.shape[2],
                          "transform": out_transform})
-
+        print(f"crop_image out_image.shape:{out_image.shape}")
+        print(f"crop_image out_meta:{out_meta}")
         with rasterio.open(output_file, "w", **out_meta) as dest:
             dest.write(out_image)
             if debug:
                 fig, ax = plt.subplots(figsize=(14, 14))
-                show(out_image, cmap='terrain', ax=ax)
+                show(out_image, cmap='viridis', ax=ax)
                 plt.show()
 
 def crop_image_files(download_dir, resolution):
@@ -200,27 +200,13 @@ def stack_bands_together(input_dir, resolution, band_list):
 #     resolution = 10
 #     stack_bands_together(download_dir, resolution, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
-# if __name__ == "__main__":
-#     today_string = date.today().strftime("%Y-%m-%d")
-#     collection_name = "SENTINEL-2"  # Sentinel satellite
-#     download_dir = f"data/{collection_name}/{today_string}"
-#     resolution = 10  # Define the target resolution (e.g., 10 meters)
-#     crop_image_files(download_dir, resolution)
 
 if __name__ == "__main__":
     today_string = date.today().strftime("%Y-%m-%d")
     collection_name = "SENTINEL-2"  # Sentinel satellite
     download_dir = f"data/{collection_name}/{today_string}"
-    merged_band_dir = f"data/{collection_name}/{today_string}/merged"
-    band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
-                 'TCI', 'WVP']
     resolution = 10  # Define the target resolution (e.g., 10 meters)
-    perform_jp2_to_tiff_conversion(download_dir)
-    merge_files(download_dir, resolution, band_list, False)
-
-    re_project_files(download_dir, resolution)
     crop_image_files(download_dir, resolution)
-    stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
 # if __name__ == "__main__":
 #     today_string = date.today().strftime("%Y-%m-%d")
@@ -232,6 +218,21 @@ if __name__ == "__main__":
 #     resolution = 10  # Define the target resolution (e.g., 10 meters)
 #     perform_jp2_to_tiff_conversion(download_dir)
 #     merge_files(download_dir, resolution, band_list, False)
+#
+#     re_project_files(download_dir, resolution)
+#     crop_image_files(download_dir, resolution)
+#     stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
+
+# if __name__ == "__main__":
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     collection_name = "SENTINEL-2"  # Sentinel satellite
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     # merged_band_dir = f"data/{collection_name}/{today_string}/merged"
+#     band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
+#                  'TCI', 'WVP']
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     perform_jp2_to_tiff_conversion(download_dir)
+#     merge_files(download_dir, resolution, band_list, True)
 #     re_project_files(download_dir, resolution)
 #     crop_image_files(download_dir, resolution)
 #     stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])

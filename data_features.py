@@ -130,6 +130,7 @@ def create_feature_indexes(input_path, output_path, resolution):
 
 def create_feature_index_image(data, feature_name, crs, transform, output_path):
     print(f"{feature_name} : {feature_name}")
+    print(f"create_feature_index_image|crs : {crs}")
     with rasterio.open(f"{output_path}/{feature_name}.tiff", 'w',
         driver='GTiff',
         height=data.shape[0],
