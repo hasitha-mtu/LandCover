@@ -89,8 +89,9 @@ def download_data(download_location, area_foot_print, start_date, end_date,
             print(feature['Footprint'])
             print(feature['GeoFootprint'])
             print(feature['index'])
-            with multiprocessing.Pool() as pool:
-                pool.map(download_image_zip, [(feature['Id'], download_location)])
+            download_image_zip((feature['Id'], download_location))
+            # with multiprocessing.Pool() as pool:
+            #     pool.map(download_image_zip, [(feature['Id'], download_location)])
     except Exception as e:
         print(f"Problem with server error: {e}")
 
