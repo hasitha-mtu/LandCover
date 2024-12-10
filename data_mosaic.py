@@ -147,11 +147,13 @@ def crop_image(input_file, output_file, polygon, debug):
     print(f"crop_image output_file:{output_file}")
     print(f"crop_image polygon:{polygon}")
     with rasterio.open(input_file) as src:
+        data = src.read(1)
         out_image, out_transform = rasterio.mask.mask(src, [polygon], crop=True)
         out_meta = src.meta.copy()
+        print(f"crop_image out_meta:{out_meta}")
         out_meta.update({"driver": "GTiff",
-                         "height": out_image.shape[1],
-                         "width": out_image.shape[2],
+                         "height": data.shape[0],
+                         "width": data.shape[1],
                          "transform": out_transform})
 
         with rasterio.open(output_file, "w", **out_meta) as dest:

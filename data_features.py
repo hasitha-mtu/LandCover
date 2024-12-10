@@ -160,23 +160,30 @@ def perform_feature_extraction(input_dir, resolution):
 
 def plot_feature_indexes(ndvi, ndwi, ndbi, ndui, nddi):
     # Create a figure with multiple subplots
-    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(15, 10))
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(6, 5))
 
     # Plot each index
     axes[0, 0].imshow(ndvi, cmap='viridis')
+    # axes[0, 0].set_axis_off()
     axes[0, 0].set_title('NDVI')
 
-    axes[0, 1].imshow(ndwi, cmap='Blues')
+    axes[0, 1].imshow(ndwi, cmap='viridis')
+    # axes[0, 1].set_axis_off()
     axes[0, 1].set_title('NDWI')
 
-    axes[1, 0].imshow(ndbi, cmap='YlGn')
+    axes[1, 0].imshow(ndbi, cmap='viridis')
+    # axes[1, 0].set_axis_off()
     axes[1, 0].set_title('NDBI')
 
-    axes[1, 1].imshow(ndui, cmap='RdYlGn')
+    axes[1, 1].imshow(ndui, cmap='viridis')
+    # axes[1, 1].set_axis_off()
     axes[1, 1].set_title('NDUI')
 
-    axes[2, 0].imshow(nddi, cmap='YlGn')
+    axes[2, 0].imshow(nddi, cmap='viridis')
+    # axes[2, 0].set_axis_off()
     axes[2, 0].set_title('NDDI')
+
+    axes[2, 1].set_axis_off()
 
     # Adjust layout and display the plot
     plt.tight_layout()
