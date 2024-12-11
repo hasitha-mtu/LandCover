@@ -142,7 +142,7 @@ if __name__ == "__main__":
     geo_json = "config/test_map.geojson"
     output_path = "data/land_cover/cork2/clipped_raster.tif"
     clip_tiff(file_path, output_path, geo_json)
-    view_tiff("data/land_cover/cork2/clipped_raster.tif")
+    view_tiff("data/land_cover/cork2/cropped_raster.tif")
 
 # if __name__ == "__main__":
 #     # file_path_2006 = "data/land_cover/2006/U2012_CLC2006_V2020_20u1.tif"

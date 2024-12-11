@@ -108,9 +108,10 @@ def download_image_zip(download_info):
         while response.status_code in valid_http_response_codes:
             url = response.headers["Location"]
             response = session.get(url, allow_redirects=False)
-        file = session.get(url, verify=False, allow_redirects=True)
+        file = session.get(url, allow_redirects=True)
         with open(f"{dir_path}/{product_id}.zip", "wb", ) as p:
             p.write(file.content)
+        print(f"download_image_zip|product id : {product_id} successfully downloaded")
     except Exception as e:
         print(f"Problem with server error: {e}")
 
@@ -172,7 +173,7 @@ if __name__ == "__main__":
     today = date.today()
     # today = date.fromisoformat('2024-10-30')
     today_string = today.strftime("%Y-%m-%d")
-    yesterday = today - timedelta(days=30)
+    yesterday = today - timedelta(days=1)
     yesterday_string = yesterday.strftime("%Y-%m-%d")
     selected_area = get_polygon()
     collection_name = "SENTINEL-2"  # Sentinel satellite
