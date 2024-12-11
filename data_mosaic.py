@@ -51,7 +51,7 @@ def mosaic_images(image_paths, output_file, DEBUG):
     mosaic, out_transform = merge(src_files)
     if DEBUG:
         fig, ax = plt.subplots(figsize=(14, 14))
-        show(mosaic, cmap='terrain', ax=ax)
+        show(mosaic, cmap='viridis', ax=ax)
         plt.show()
     out_meta = src_files[0].meta.copy()
     out_meta.update({"driver": "GTiff",
@@ -201,12 +201,12 @@ def stack_bands_together(input_dir, resolution, band_list):
 #     stack_bands_together(download_dir, resolution, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
 
-if __name__ == "__main__":
-    today_string = date.today().strftime("%Y-%m-%d")
-    collection_name = "SENTINEL-2"  # Sentinel satellite
-    download_dir = f"data/{collection_name}/{today_string}"
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    crop_image_files(download_dir, resolution)
+# if __name__ == "__main__":
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     collection_name = "SENTINEL-2"  # Sentinel satellite
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     crop_image_files(download_dir, resolution)
 
 # if __name__ == "__main__":
 #     today_string = date.today().strftime("%Y-%m-%d")
@@ -223,19 +223,19 @@ if __name__ == "__main__":
 #     crop_image_files(download_dir, resolution)
 #     stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
-# if __name__ == "__main__":
-#     today_string = date.today().strftime("%Y-%m-%d")
-#     collection_name = "SENTINEL-2"  # Sentinel satellite
-#     download_dir = f"data/{collection_name}/{today_string}"
-#     # merged_band_dir = f"data/{collection_name}/{today_string}/merged"
-#     band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
-#                  'TCI', 'WVP']
-#     resolution = 10  # Define the target resolution (e.g., 10 meters)
-#     perform_jp2_to_tiff_conversion(download_dir)
-#     merge_files(download_dir, resolution, band_list, True)
-#     re_project_files(download_dir, resolution)
-#     crop_image_files(download_dir, resolution)
-#     stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
+if __name__ == "__main__":
+    today_string = date.today().strftime("%Y-%m-%d")
+    collection_name = "SENTINEL-2"  # Sentinel satellite
+    download_dir = f"data/{collection_name}/{today_string}"
+    # merged_band_dir = f"data/{collection_name}/{today_string}/merged"
+    band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
+                 'TCI', 'WVP']
+    resolution = 10  # Define the target resolution (e.g., 10 meters)
+    perform_jp2_to_tiff_conversion(download_dir)
+    merge_files(download_dir, resolution, band_list, True)
+    re_project_files(download_dir, resolution)
+    crop_image_files(download_dir, resolution)
+    stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
 
 
