@@ -11,7 +11,8 @@ from shapely.geometry import shape
 from rasterio.mask import mask
 import geopandas as gpd
 import numpy as np
-from datetime import date
+import rasterio
+from shapely.ops import unary_union
 
 def load_cmap(file_path = "config/color_map.json"):
     # Color map is https://collections.sentinel-hub.com/corine-land-cover/readme.html
@@ -94,7 +95,7 @@ def get_polygon(path = "config/test_map.geojson"):
 
 def read_shape_file(file_path):
     gdf = gpd.read_file(file_path)
-    print(gdf.head())
+    print(gdf)
 
 def read_raster_file(file_path):
     view_tiff(file_path, title="Land Cover")
@@ -118,6 +119,60 @@ def read_raster(file_path):
     image = imread(file_path)
     print(image.shape)
 
+def make_union_polygon(polygons):
+    print()
+    """
+    This algorithm goes through all polygons and adds them to union_poly only if they're
+    not already contained in union_poly.
+    (in other words, we're only adding them to union_poly if they can increase the total area)
+    """
+    union_poly = polygons[0]
+    union_parts = [polygons[0], ]
+    for p in polygons[1:]:
+        common = union_poly.intersection(p)
+        if p.area - common.area < 0.001:
+            pass
+        else:
+            union_parts.append(p)
+            union_poly = union_poly.union(p)
+    return union_parts
+
+def get_min_covering(union_polygons):
+    """
+    This algorithm computes a minimal covering set of the entire area.
+    This means we're going to eliminate some of the images. We do this
+    by checking the union of all polygons before and after removing
+    each image.
+    If by removing the image, the total area is the same, then the image
+    can be eliminated since it didn't have any contribution.
+    If the area decreases by removing the image, then it can stay.
+    """
+
+    whole = unary_union(union_polygons)
+    print(f"whole: {whole}")
+    L = union_polygons
+    V = []
+    i = 0
+    j = 0
+    while j < len(union_polygons):
+        without = unary_union(L[:i] + L[i + 1:])
+        if whole.area - without.area < 0.001:
+            L.pop(i)
+        else:
+            V.append(union_polygons[j])
+            i += 1
+        j += 1
+
+        if j % 20 == 0:
+            print(i, j, len(L))
+    return V
+
+def get_polygon_from_shapefile(file_path):
+    gdf = gpd.read_file(file_path)
+    union_polygons = make_union_polygon(gdf['geometry'].tolist())
+    min_area_polygon = unary_union(union_polygons)
+    return min_area_polygon
+
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/cork/clipped_raster.tif"
 #     read_raster(file_path)
@@ -138,11 +193,17 @@ def read_raster(file_path):
 #     plt.show()
 
 if __name__ == "__main__":
-    file_path = "data/land_cover/cork/U2018_CLC2018_V2020_20u1.tif"
-    geo_json = "config/test_map.geojson"
-    output_path = "data/land_cover/cork2/clipped_raster.tif"
-    clip_tiff(file_path, output_path, geo_json)
-    view_tiff("data/land_cover/cork2/cropped_raster.tif")
+    file_path = "data/land_cover/crookstown/Crookstown_subbasin_all.shp"
+    output_path = "data/land_cover/crookstown/crookstown_raster.tif"
+    min_area_polygon = get_polygon_from_shapefile(file_path)
+    print(f"min_area_polygons: {min_area_polygon}")
+
+# if __name__ == "__main__":
+#     file_path = "data/land_cover/test_map/U2018_CLC2018_V2020_20u1.tif"
+#     geo_json = "config/test_map.geojson"
+#     output_path = "data/land_cover/test_map/cropped_raster.tif"
+#     clip_tiff(file_path, output_path, geo_json)
+#     view_tiff("data/land_cover/test_map/cropped_raster.tif")
 
 # if __name__ == "__main__":
 #     # file_path_2006 = "data/land_cover/2006/U2012_CLC2006_V2020_20u1.tif"

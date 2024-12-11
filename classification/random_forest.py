@@ -7,7 +7,6 @@ import rasterio
 import rasterio.plot
 import data_preprocessing
 import matplotlib.pyplot as plt
-from rasterio.transform import from_origin
 from utils import load_cmap
 
 
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"../data/{collection_name}/{today_string}"
     # crop_shape_file = "../data/land_cover/cork2/shape_file/cropped_shapefile.shp"
-    ground_truth_file = "../data/land_cover/cork2/resampled_cropped_raster.tif"
+    ground_truth_file = "../data/land_cover/test_map/cropped_raster.tif"
     labels = get_labels(ground_truth_file)
     print(f"shape of labels {labels.shape}")
     data_stack = get_data_stack(download_dir)
