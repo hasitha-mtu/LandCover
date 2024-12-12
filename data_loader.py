@@ -10,6 +10,7 @@ import requests
 from shapely.geometry import shape
 from shapely.ops import unary_union
 
+from utils import get_polygon_from_shapefile as get_polygon1
 from utils import get_polygon
 
 copernicus_user = "adikari.adikari@mycit.ie"  # copernicus User
@@ -48,12 +49,6 @@ def download_data(download_location, area_foot_print, start_date, end_date,
         f"and ContentDate/Start gt {start_date}T00:00:00.000Z "
         f"and ContentDate/Start lt {end_date}T00:00:00.000Z&$count=True&$top=1000").json()
     print(f"products_json : {products_json}")
-    # products_json = requests.get(
-    #     f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq '{data_collection}' "
-    #     f"and OData.CSC.Intersects(area=geography'SRID=4326;{area_foot_print}') "
-    #     f"and ContentDate/Start gt {start_date}T00:00:00.000Z "
-    #     f"and Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value eq '0.3') "
-    #     f"and ContentDate/Start lt {end_date}T00:00:00.000Z&$count=True&$top=1000").json()
 
     product_df = pd.DataFrame.from_dict(products_json['value'])
     print(f"products_df : {product_df.head()}")
@@ -173,9 +168,11 @@ if __name__ == "__main__":
     today = date.today()
     # today = date.fromisoformat('2024-10-30')
     today_string = today.strftime("%Y-%m-%d")
-    yesterday = today - timedelta(days=1)
+    yesterday = today - timedelta(days=10)
     yesterday_string = yesterday.strftime("%Y-%m-%d")
     selected_area = get_polygon()
+    print(f"selected_area : {selected_area}")
+
     collection_name = "SENTINEL-2"  # Sentinel satellite
     download_dir = f"data/{collection_name}/{today_string}"
     print(f"download_dir : {download_dir}")

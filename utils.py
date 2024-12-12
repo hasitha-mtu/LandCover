@@ -85,7 +85,7 @@ def get_parent_directories(download_dir):
         dir_list.append(parent_dir_path)
     return dir_list
 
-def get_polygon(path = "config/test_map.geojson"):
+def get_polygon(path = "config/crookstown.geojson"):
     geojson = read_geojson(path)
     polygon_jsons = geojson["features"]
     polygon_json = polygon_jsons[0]
