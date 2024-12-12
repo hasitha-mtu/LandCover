@@ -24,7 +24,7 @@ def get_data_stack(dir_path):
     print(f"get_data_stack|input_files: {input_files}")
     return data_preprocessing.get_data_stack(input_files)
 
-def train_model(labels, data_stack):
+def train_model(labels, data_stack, output_file):
     # Example: Features = bands, Labels = land cover classes
     X = data_stack.reshape(-1, len(data_stack))  # Flattened bands
     y = labels.flatten()  # Corresponding labels
@@ -48,7 +48,7 @@ def train_model(labels, data_stack):
 
     src = rasterio.open(ground_truth_file)
     with rasterio.open(
-            'classified.tif',
+            output_file,
             'w',
             driver='GTiff',
             height=classified.shape[0],
@@ -65,12 +65,12 @@ if __name__ == "__main__":
     resolution = 10  # Define the target resolution (e.g., 10 meters)
     today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"../data/{collection_name}/{today_string}"
-    # crop_shape_file = "../data/land_cover/cork2/shape_file/cropped_shapefile.shp"
     ground_truth_file = "../data/land_cover/crookstown/raster/cropped_raster.tif"
     labels = get_labels(ground_truth_file)
     print(f"shape of labels {labels.shape}")
     data_stack = get_data_stack(download_dir)
     print(f"shape of normalized_stack {data_stack.shape}")
     print(f"shape of normalized_stack {data_stack[0].shape}")
-    train_model(labels, data_stack)
+    output_file = "../data/land_cover/crookstown/classified_raster.tif"
+    train_model(labels, data_stack, output_file)
 
