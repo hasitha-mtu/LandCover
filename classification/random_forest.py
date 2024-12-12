@@ -8,6 +8,7 @@ import rasterio.plot
 import data_preprocessing
 import matplotlib.pyplot as plt
 from utils import load_cmap
+import numpy as np
 
 
 def get_labels(ground_truth_file):
@@ -20,7 +21,7 @@ def get_normalized_stack(dir_path):
     return data_preprocessing.get_normalized_stack(input_files)
 
 def get_data_stack(dir_path):
-    input_files = glob.glob(f"{dir_path}/aligned/*.tiff")
+    input_files = glob.glob(f"{dir_path}/aligned/B*m.tiff")
     print(f"get_data_stack|input_files: {input_files}")
     return data_preprocessing.get_data_stack(input_files)
 
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     labels = get_labels(ground_truth_file)
     print(f"shape of labels {labels.shape}")
     data_stack = get_data_stack(download_dir)
+    data_stack = np.nan_to_num(data_stack, nan=0)
     print(f"shape of normalized_stack {data_stack.shape}")
     print(f"shape of normalized_stack {data_stack[0].shape}")
     output_file = "../data/land_cover/crookstown/classified_raster.tif"
