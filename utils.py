@@ -90,6 +90,7 @@ def get_polygon(path = "config/test_map.geojson"):
     polygon_jsons = geojson["features"]
     polygon_json = polygon_jsons[0]
     geometry_data = polygon_json["geometry"]
+    print(f"get_polygon|geometry_data:{geometry_data}")
     polygon = shape(geometry_data)
     return polygon
 
@@ -167,11 +168,17 @@ def get_min_covering(union_polygons):
             print(i, j, len(L))
     return V
 
-def get_polygon_from_shapefile(file_path):
+def get_polygon_from_shapefile(file_path = "data/land_cover/crookstown/wgs84/crookstown.shp"):
     gdf = gpd.read_file(file_path)
     union_polygons = make_union_polygon(gdf['geometry'].tolist())
     min_area_polygon = unary_union(union_polygons)
+    print(f"get_polygon_from_shapefile|min_area_polygon:{min_area_polygon}")
     return min_area_polygon
+
+def change_coordinate_system(input_path, output_path, coordinate_system):
+    gdf = gpd.read_file(input_path)
+    gdf = gdf.to_crs(epsg=coordinate_system)
+    gdf.to_file(output_path)
 
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/cork/clipped_raster.tif"
@@ -193,7 +200,7 @@ def get_polygon_from_shapefile(file_path):
 #     plt.show()
 
 if __name__ == "__main__":
-    file_path = "data/land_cover/crookstown/Crookstown_subbasin_all.shp"
+    file_path = "data/land_cover/crookstown/wgs84/crookstown.shp"
     output_path = "data/land_cover/crookstown/crookstown_raster.tif"
     min_area_polygon = get_polygon_from_shapefile(file_path)
     print(f"min_area_polygons: {min_area_polygon}")
