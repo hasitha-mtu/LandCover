@@ -49,8 +49,7 @@ def view_tiff(file_path, title="Land Cover"):
     print(f"view_tiff|cmap:{cmap}")
     plt.show()
 
-def clip_tiff(tiff_path, output_path, polygon_path):
-    roi_polygon = get_polygon(polygon_path)
+def clip_tiff(tiff_path, output_path, roi_polygon):
     print(f"roi_polygon: {roi_polygon}")
     with rasterio.open(tiff_path) as src:
         out_image, out_transform = mask(src, [shape(roi_polygon)], crop=True)
@@ -199,18 +198,19 @@ def change_coordinate_system(input_path, output_path, coordinate_system):
 #     rasterio.plot.show(tiff)
 #     plt.show()
 
-if __name__ == "__main__":
-    file_path = "data/land_cover/crookstown/wgs84/crookstown.shp"
-    output_path = "data/land_cover/crookstown/crookstown_raster.tif"
-    min_area_polygon = get_polygon_from_shapefile(file_path)
-    print(f"min_area_polygons: {min_area_polygon}")
-
 # if __name__ == "__main__":
-#     file_path = "data/land_cover/test_map/U2018_CLC2018_V2020_20u1.tif"
-#     geo_json = "config/test_map.geojson"
-#     output_path = "data/land_cover/test_map/cropped_raster.tif"
-#     clip_tiff(file_path, output_path, geo_json)
-#     view_tiff("data/land_cover/test_map/cropped_raster.tif")
+#     file_path = "data/land_cover/crookstown/wgs84/crookstown.shp"
+#     output_path = "data/land_cover/crookstown/crookstown_raster.tif"
+#     min_area_polygon = get_polygon_from_shapefile(file_path)
+#     print(f"min_area_polygons: {min_area_polygon}")
+
+if __name__ == "__main__":
+    file_path = "data/land_cover/crookstown/raster/U2018_CLC2018_V2020_20u1.tif"
+    shapefile = "data/land_cover/crookstown/wgs84/crookstown.shp"
+    min_area_polygon = get_polygon_from_shapefile(shapefile)
+    output_path = "data/land_cover/crookstown/raster/cropped_raster.tif"
+    clip_tiff(file_path, output_path, min_area_polygon)
+    view_tiff("data/land_cover/crookstown/raster/cropped_raster.tif")
 
 # if __name__ == "__main__":
 #     # file_path_2006 = "data/land_cover/2006/U2012_CLC2006_V2020_20u1.tif"

@@ -11,7 +11,8 @@ from rasterio.warp import calculate_default_transform, reproject, Resampling
 from pprint import pprint
 import matplotlib.pyplot as plt
 
-from utils import get_parent_directories, get_polygon, view_tiff
+from utils import get_parent_directories
+from utils import get_polygon_from_shapefile as get_polygon
 import glob
 from rasterio.plot import show
 from rasterio.merge import merge
