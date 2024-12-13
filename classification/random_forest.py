@@ -119,7 +119,7 @@ def get_input_labels(shapefile_path, ground_truth):
     print(f"get_input_labels|gdf_points : {gdf_points}")
     # Perform spatial join
     joined_df = gpd.sjoin(gdf_points, gdf, how='inner', predicate='within')
-    return joined_df
+    return joined_df[["lat", "lon", "value", "CODE_18"]]
 
 def point_contains(point, gdf):
     code = 999
