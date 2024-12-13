@@ -1,21 +1,21 @@
-import geopandas as gpd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from datetime import date, timedelta
 import glob
+from datetime import date, timedelta
+
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import rasterio
 import rasterio.plot
-import data_preprocessing
-import matplotlib.pyplot as plt
+from pyproj import Transformer
+from shapely.geometry import Point
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 
+import data_preprocessing
 import utils
 from utils import load_cmap
-import numpy as np
-from pyproj import Transformer
-import pandas as pd
 
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 
 def get_labels(ground_truth_file):
     src = rasterio.open(ground_truth_file)

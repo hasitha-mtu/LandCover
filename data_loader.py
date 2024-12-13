@@ -1,17 +1,13 @@
 import glob
-import multiprocessing
 import os
 import zipfile
-from datetime import date, timedelta
+from datetime import date
 
 import geopandas as gpd
 import pandas as pd
 import requests
 from shapely.geometry import shape
 from shapely.ops import unary_union
-
-from utils import get_polygon_from_shapefile as get_polygon1
-from utils import get_polygon
 
 copernicus_user = "adikari.adikari@mycit.ie"  # copernicus User
 copernicus_password = "Hasitha@4805"  # copernicus Password

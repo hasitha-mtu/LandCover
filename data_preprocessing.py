@@ -1,16 +1,14 @@
-from datetime import date
 import glob
-import os
-import geopandas as gpd
-import shapefile
-import rasterio
-from rasterio.warp import reproject, Resampling
-import numpy as np
-import re
 import ntpath
-from utils import view_tiff
+import os
+from datetime import date
+
+import geopandas as gpd
+import numpy as np
 import pandas as pd
+import rasterio
 from pyproj import Transformer
+from rasterio.warp import reproject, Resampling
 
 
 def get_input_files(dir_path, resolution = 10,
