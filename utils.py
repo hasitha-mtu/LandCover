@@ -13,6 +13,7 @@ import geopandas as gpd
 import numpy as np
 import rasterio
 from shapely.ops import unary_union
+import ntpath
 
 def load_cmap(file_path = "config/color_map.json"):
     # Color map is https://collections.sentinel-hub.com/corine-land-cover/readme.html
@@ -178,6 +179,13 @@ def change_coordinate_system(input_path, output_path, coordinate_system):
     gdf = gpd.read_file(input_path)
     gdf = gdf.to_crs(epsg=coordinate_system)
     gdf.to_file(output_path)
+
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
+
+def file_name_from_path(path):
+    return path_leaf(path).split(".")[0]
 
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/cork/clipped_raster.tif"
