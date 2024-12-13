@@ -74,11 +74,14 @@ def train_model(label_df, input_df, _output_file):
     print(f"train_model|y:{y.shape}")
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42,  shuffle=True)
-    labels = np.unique(y)
-    print('The training data include {n} classes: {classes}'.format(n=labels.size,
-                                                                    classes=labels))
+    print('All data include {n} classes: {classes}'.format(n=np.unique(y).size,
+                                                                    classes=np.unique(y)))
+    print('The training data include {n} classes: {classes}'.format(n=np.unique(y_train).size,
+                                                                    classes=np.unique(y_train)))
+    print('The training data include {n} classes: {classes}'.format(n=np.unique(y_test).size,
+                                                                    classes=np.unique(y_test)))
     # Train model
-    clf = RandomForestClassifier(n_estimators=500, random_state=42, oob_score=True)
+    clf = RandomForestClassifier(n_estimators=1000, random_state=42, oob_score=True, verbose=1)
     clf.fit(X_train, y_train)
     print('Our OOB prediction of accuracy is: {oob}%'.format(oob=clf.oob_score * 100))
     bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
@@ -87,6 +90,7 @@ def train_model(label_df, input_df, _output_file):
     df = pd.DataFrame()
     df['truth'] = y_test
     df['predict'] = clf.predict(X_test)
+    print(df['predict'])
 
     # Cross-tabulate predictions
     print(pd.crosstab(df['truth'], df['predict'], margins=True))
