@@ -1,7 +1,7 @@
 import geopandas as gpd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from datetime import date
+from datetime import date, timedelta
 import glob
 import rasterio
 import rasterio.plot
@@ -98,7 +98,7 @@ def get_input_dataframe(file_paths, latlon_crs = 'epsg:4326'):
     print(result_df.shape)
     return result_df
 
-def get_input_labels(shapefile_path, ground_truth):
+def get_input_labels1(shapefile_path, ground_truth):
     gdf = gpd.read_file(shapefile_path)
     print(f"get_input_labels|gdf : {gdf}")
     df = get_data_frame(ground_truth)
@@ -110,6 +110,16 @@ def get_input_labels(shapefile_path, ground_truth):
         print(f"{i} |code of {point} is : {code}")
         df.at[i, 'code'] = code
     return df
+
+def get_input_labels(shapefile_path, ground_truth):
+    gdf = gpd.read_file(shapefile_path)
+    print(f"get_input_labels|gdf : {gdf}")
+    df = get_data_frame(ground_truth)
+    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
+    print(f"get_input_labels|gdf_points : {gdf_points}")
+    # Perform spatial join
+    joined_df = gpd.sjoin(gdf_points, gdf, how='inner', predicate='within')
+    return joined_df
 
 def point_contains(point, gdf):
     code = 999
@@ -140,7 +150,8 @@ def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
 if __name__ == "__main__":
     collection_name = "SENTINEL-2"
     resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today_string = date.today().strftime("%Y-%m-%d")
+    today = date.today() - timedelta(days=1)
+    today_string = today.strftime("%Y-%m-%d")
     download_dir = f"../data/{collection_name}/{today_string}"
     input_files = get_input_files(download_dir)
     input_df = get_input_dataframe(input_files)
