@@ -68,7 +68,7 @@ def train_model(labels, data_stack, ground_truth_file, output_file):
         dst.write(classified, 1)
 
 def get_input_files(input_dir):
-    file_paths = glob.glob(f"{input_dir}/aligned/*")
+    file_paths = glob.glob(f"{input_dir}/aligned/*.tiff")
     return file_paths
 
 def get_input_dataframe(file_paths, latlon_crs = 'epsg:4326'):
@@ -118,8 +118,16 @@ def get_input_labels(shapefile_path, ground_truth):
     gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
     print(f"get_input_labels|gdf_points : {gdf_points}")
     # Perform spatial join
-    joined_df = gpd.sjoin(gdf_points, gdf, how='inner', predicate='within')
+    # joined_df = gpd.sjoin(gdf_points, gdf, how='inner', predicate='within')
+    joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
+    polygon = utils.get_polygon_from_shapefile(file_path = "../data/land_cover/crookstown/wgs84/crookstown.shp")
+    for i, row in joined_df.iterrows():
+        point = Point(row['lat'], row['lon'])
+        if not polygon.contains(point):
+            joined_df.at[i, 'CODE_18'] = 999
     return joined_df[["lat", "lon", "value", "CODE_18"]]
+
+
 
 def point_contains(point, gdf):
     code = 999
@@ -158,7 +166,7 @@ if __name__ == "__main__":
     shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
     ground_truth = "../data/land_cover/crookstown/raster/cropped_raster.tif"
     input_labels = get_input_labels(shapefile_path, ground_truth)
-    input_labels.to_csv("../data/land_cover/crookstown/labels.csv")
+    input_labels.to_csv("../data/land_cover/crookstown/updated_labels1.csv")
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
