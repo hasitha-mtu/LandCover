@@ -81,7 +81,7 @@ def train_model(label_df, input_df, _output_file):
     print('The training data include {n} classes: {classes}'.format(n=np.unique(y_test).size,
                                                                     classes=np.unique(y_test)))
     # Train model
-    clf = RandomForestClassifier(n_estimators=1000, random_state=42, oob_score=True, verbose=1)
+    clf = RandomForestClassifier(n_estimators=10000, random_state=42, oob_score=True, verbose=1)
     clf.fit(X_train, y_train)
     print('Our OOB prediction of accuracy is: {oob}%'.format(oob=clf.oob_score * 100))
     bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
