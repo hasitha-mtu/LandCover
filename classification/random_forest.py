@@ -11,6 +11,7 @@ from pyproj import Transformer
 from shapely.geometry import Point
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import normalize
 
 import data_preprocessing
 import utils
@@ -72,31 +73,35 @@ def train_model(label_df, input_df, _output_file):
     y = label_df.to_numpy().ravel()
     print(f"train_model|X:{X.shape}")
     print(f"train_model|y:{y.shape}")
-    # Split data
+
+    X = normalize(X, norm="l2")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42,  shuffle=True)
     print('All data include {n} classes: {classes}'.format(n=np.unique(y).size,
                                                                     classes=np.unique(y)))
-    print('The training data include {n} classes: {classes}'.format(n=np.unique(y_train).size,
+    print('Train data include {n} classes: {classes}'.format(n=np.unique(y_train).size,
                                                                     classes=np.unique(y_train)))
-    print('The training data include {n} classes: {classes}'.format(n=np.unique(y_test).size,
+    print('Test data include {n} classes: {classes}'.format(n=np.unique(y_test).size,
                                                                     classes=np.unique(y_test)))
-    # Train model
-    clf = RandomForestClassifier(n_estimators=10000, random_state=42, oob_score=True, verbose=1)
+
+    clf = RandomForestClassifier(
+        n_estimators=10000,
+        criterion="log_loss",
+        random_state=42,
+        oob_score=True)
     clf.fit(X_train, y_train)
-    print('Our OOB prediction of accuracy is: {oob}%'.format(oob=clf.oob_score * 100))
-    bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    print('Our OOB prediction of accuracy is: {oob}%'.format(oob=clf.oob_score_ * 100))
+
+    bands = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11]
     for b, imp in zip(bands, clf.feature_importances_):
         print('Band {b} importance: {imp}'.format(b=b, imp=imp))
+
     df = pd.DataFrame()
     df['truth'] = y_test
     df['predict'] = clf.predict(X_test)
-    print(df['predict'])
-
-    # Cross-tabulate predictions
     print(pd.crosstab(df['truth'], df['predict'], margins=True))
 
-    classified = clf.predict(X).reshape((96, 142))
-
+    y_predict = clf.predict(X)
+    classified = y_predict.reshape((96, 142))
 
     cmap, legend = load_cmap(file_path = "../config/color_map.json")
     fig, ax = plt.subplots(figsize=(20, 20))
@@ -152,12 +157,8 @@ def get_input_labels1(shapefile_path, ground_truth):
 
 def get_input_labels(shapefile_path, ground_truth):
     gdf = gpd.read_file(shapefile_path)
-    print(f"get_input_labels|gdf : {gdf}")
     df = get_data_frame(ground_truth)
     gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
-    print(f"get_input_labels|gdf_points : {gdf_points}")
-    # Perform spatial join
-    # joined_df = gpd.sjoin(gdf_points, gdf, how='inner', predicate='within')
     joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
     polygon = utils.get_polygon_from_shapefile(file_path = "../data/land_cover/crookstown/wgs84/crookstown.shp")
     for i, row in joined_df.iterrows():
@@ -197,14 +198,16 @@ def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
 if __name__ == "__main__":
     collection_name = "SENTINEL-2"
     resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today = date.today() - timedelta(days=1)
+    today = date.today() - timedelta(days=2)
     today_string = today.strftime("%Y-%m-%d")
     download_dir = f"../data/{collection_name}/{today_string}"
     input_files = get_input_files(download_dir)
-    selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
+    # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
+    selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDUI", "NDVI", "NDWI"]
     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m"]
     # selected_bands = ["NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
     input_df = get_input_dataframe(input_files, selected_bands)
+    input_df.to_csv("../data/land_cover/crookstown/input_df.csv")
     shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
     ground_truth = "../data/land_cover/crookstown/raster/cropped_raster.tif"
     input_labels = get_input_labels(shapefile_path, ground_truth)
@@ -213,7 +216,9 @@ if __name__ == "__main__":
     csv_path = "../data/land_cover/crookstown/updated_labels1.csv"
     input_labels = pd.read_csv(csv_path, usecols=["CODE_18"])
     print(input_df.dtypes)
+    print(f"input_df : {input_df}")
     print(input_labels.dtypes)
+    print(f"input_labels : {input_labels}")
     train_model(input_labels, input_df, output_file)
 
 
