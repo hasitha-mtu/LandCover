@@ -12,7 +12,8 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 
 from utils import get_parent_directories
-from utils import get_polygon_from_shapefile as get_polygon
+# from utils import get_polygon_from_shapefile as get_polygon
+from utils import get_polygon
 import glob
 from rasterio.plot import show
 from rasterio.merge import merge
@@ -169,7 +170,7 @@ def crop_image_files(download_dir, resolution):
     roi_dir = f"{download_dir}/roi"
     os.makedirs(roi_dir, exist_ok=True)
     merged_files = glob.glob(f"{reprojected_dir}/*_{resolution}m.tiff")
-    selected_area = get_polygon()
+    selected_area = get_polygon(path="config/selected_map.geojson")
     print(f"selected_area : {selected_area}")
     for merged_file in merged_files:
         output_file = re.sub("reprojected", "roi", merged_file)

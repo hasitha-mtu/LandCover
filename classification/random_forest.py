@@ -101,7 +101,8 @@ def train_model(label_df, input_df, _output_file):
     print(pd.crosstab(df['truth'], df['predict'], margins=True))
 
     y_predict = clf.predict(X)
-    classified = y_predict.reshape((96, 142))
+    np.savetxt("../data/land_cover/selected/output.txt", y_predict, fmt='%d')
+    classified = y_predict.reshape((305, 705))
 
     cmap, legend = load_cmap(file_path = "../config/color_map.json")
     fig, ax = plt.subplots(figsize=(20, 20))
@@ -111,6 +112,7 @@ def train_model(label_df, input_df, _output_file):
 
 
 def get_input_files(input_dir):
+    print(f"get_input_files|input_dir: {input_dir}")
     file_paths = glob.glob(f"{input_dir}/aligned/*.tiff")
     return file_paths
 
@@ -155,7 +157,7 @@ def get_input_labels1(shapefile_path, ground_truth):
         df.at[i, 'code'] = code
     return df
 
-def get_input_labels(shapefile_path, ground_truth):
+def get_input_labels2(shapefile_path, ground_truth):
     gdf = gpd.read_file(shapefile_path)
     df = get_data_frame(ground_truth)
     gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
@@ -167,6 +169,17 @@ def get_input_labels(shapefile_path, ground_truth):
             joined_df.at[i, 'CODE_18'] = 999
     return joined_df[["lat", "lon", "value", "CODE_18"]]
 
+def get_input_labels(shapefile_path, ground_truth, polygon_path):
+    gdf = gpd.read_file(shapefile_path)
+    df = get_data_frame(ground_truth)
+    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
+    joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
+    polygon = utils.get_polygon(path = polygon_path)
+    for i, row in joined_df.iterrows():
+        point = Point(row['lat'], row['lon'])
+        if not polygon.contains(point):
+            joined_df.at[i, 'CODE_18'] = 999
+    return joined_df[["lat", "lon", "value", "CODE_18"]]
 
 
 def point_contains(point, gdf):
@@ -198,22 +211,24 @@ def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
 if __name__ == "__main__":
     collection_name = "SENTINEL-2"
     resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today = date.today() - timedelta(days=1)
+    today = date.today()
     today_string = today.strftime("%Y-%m-%d")
     download_dir = f"../data/{collection_name}/{today_string}"
     input_files = get_input_files(download_dir)
+    print(f"input_files : {input_files}")
     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
     selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDUI", "NDVI", "NDWI"]
     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m"]
     # selected_bands = ["NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
     input_df = get_input_dataframe(input_files, selected_bands)
-    input_df.to_csv("../data/land_cover/crookstown/input_df.csv")
+    input_df.to_csv("../data/land_cover/selected/input_df.csv")
     shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
-    ground_truth = "../data/land_cover/crookstown/raster/cropped_raster.tif"
-    input_labels = get_input_labels(shapefile_path, ground_truth)
-    input_labels.to_csv("../data/land_cover/crookstown/updated_labels1.csv")
-    output_file = "../data/land_cover/crookstown/classified_raster.tif"
-    csv_path = "../data/land_cover/crookstown/updated_labels1.csv"
+    ground_truth = "../data/land_cover/selected/cropped_raster.tif"
+    path = "../config/selected_map.geojson"
+    input_labels = get_input_labels(shapefile_path, ground_truth, path)
+    input_labels.to_csv("../data/land_cover/selected/updated_labels.csv")
+    output_file = "../data/land_cover/selected/classified_raster.tif"
+    csv_path = "../data/land_cover/selected/updated_labels.csv"
     input_labels = pd.read_csv(csv_path, usecols=["CODE_18"])
     print(input_df.dtypes)
     print(f"input_df : {input_df}")

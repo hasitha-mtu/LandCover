@@ -54,6 +54,7 @@ def clip_tiff(tiff_path, output_path, roi_polygon):
     print(f"roi_polygon: {roi_polygon}")
     with rasterio.open(tiff_path) as src:
         out_image, out_transform = mask(src, [shape(roi_polygon)], crop=True)
+        print(f"out_image.shape: {out_image.shape}")
         out_meta = src.meta.copy()
         out_meta.update({"driver": "GTiff",
                          "height": out_image.shape[1],
