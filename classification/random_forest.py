@@ -84,7 +84,7 @@ def train_model(label_df, input_df, _output_file):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=10000,
+        n_estimators=1000,
         criterion="log_loss",
         random_state=42,
         oob_score=True)
@@ -198,7 +198,7 @@ def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
 if __name__ == "__main__":
     collection_name = "SENTINEL-2"
     resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today = date.today() - timedelta(days=2)
+    today = date.today() - timedelta(days=1)
     today_string = today.strftime("%Y-%m-%d")
     download_dir = f"../data/{collection_name}/{today_string}"
     input_files = get_input_files(download_dir)

@@ -213,12 +213,19 @@ def file_name_from_path(path):
 #     print(f"min_area_polygons: {min_area_polygon}")
 
 if __name__ == "__main__":
-    file_path = "data/land_cover/crookstown/raster/U2018_CLC2018_V2020_20u1.tif"
-    shapefile = "data/land_cover/crookstown/wgs84/crookstown.shp"
-    min_area_polygon = get_polygon_from_shapefile(shapefile)
-    output_path = "data/land_cover/crookstown/raster/cropped_raster.tif"
+    file_path = "data/land_cover/selected/U2018_CLC2018_V2020_20u1.tif"
+    min_area_polygon = get_polygon(path="config/selected_map.geojson")
+    output_path = "data/land_cover/selected/cropped_raster.tif"
     clip_tiff(file_path, output_path, min_area_polygon)
-    view_tiff("data/land_cover/crookstown/raster/cropped_raster.tif")
+    view_tiff("data/land_cover/selected/cropped_raster.tif")
+
+# if __name__ == "__main__":
+#     file_path = "data/land_cover/crookstown/raster/U2018_CLC2018_V2020_20u1.tif"
+#     shapefile = "data/land_cover/crookstown/wgs84/crookstown.shp"
+#     min_area_polygon = get_polygon_from_shapefile(shapefile)
+#     output_path = "data/land_cover/crookstown/raster/cropped_raster.tif"
+#     clip_tiff(file_path, output_path, min_area_polygon)
+#     view_tiff("data/land_cover/crookstown/raster/cropped_raster.tif")
 
 # if __name__ == "__main__":
 #     # file_path_2006 = "data/land_cover/2006/U2012_CLC2006_V2020_20u1.tif"
