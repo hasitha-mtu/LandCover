@@ -84,9 +84,10 @@ def train_model(labels, features, _output_file):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=500,
-        criterion="log_loss",
+        n_estimators=10000,
+        criterion="gini",
         random_state=42,
+        n_jobs=10,
         oob_score=True)
     clf.fit(X_train, y_train)
     print('Our OOB prediction of accuracy is: {oob}%'.format(oob=clf.oob_score_ * 100))
@@ -103,11 +104,12 @@ def train_model(labels, features, _output_file):
     y_predict = clf.predict(X)
     np.savetxt("../data/land_cover/selected/output.txt", y_predict, fmt='%d')
     classified = y_predict.reshape((305, 705))
+    classified_flipped = np.flip(classified, axis=0)
 
     cmap, legend = load_cmap(file_path = "../config/color_map.json")
     fig, ax = plt.subplots(figsize=(20, 20))
     ax.legend(**legend)
-    rasterio.plot.show(classified, cmap=cmap, ax=ax, title='Land Cover Classification')
+    rasterio.plot.show(classified_flipped, cmap=cmap, ax=ax, title='Land Cover Classification')
     plt.show()
 
 
