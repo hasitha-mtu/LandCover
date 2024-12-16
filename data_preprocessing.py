@@ -10,6 +10,8 @@ import rasterio
 from pyproj import Transformer
 from rasterio.warp import reproject, Resampling
 
+# Import GDAL, NumPy, and matplotlib
+from osgeo import gdal, gdal_array
 
 def get_input_files(dir_path, resolution = 10,
                     selected_bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'],
@@ -170,6 +172,48 @@ def stack_bands_together(input_dir):
                 dest.write(band_data.read(1),i+1)
         print(f"Stacked file created {out_file}")
 
+def get_features1(input_files):
+    image_data_list = []
+    for input_file in input_files:
+        img_ds = gdal.Open(input_file, gdal.GA_ReadOnly)
+        img = np.zeros((img_ds.RasterYSize, img_ds.RasterXSize, img_ds.RasterCount),
+                       gdal_array.GDALTypeCodeToNumericTypeCode(img_ds.GetRasterBand(1).DataType))
+        for b in range(img.shape[2]):
+            img[:, :, b] = img_ds.GetRasterBand(b + 1).ReadAsArray()
+        print(img.shape)
+        image_data_list.append(img)
+    features = np.array(image_data_list)
+    print(f"features shape: {features.shape}")
+    return features
+
+def get_features(input_file):
+    img_ds = gdal.Open(input_file, gdal.GA_ReadOnly)
+    features = np.zeros((img_ds.RasterYSize, img_ds.RasterXSize, img_ds.RasterCount),
+                   gdal_array.GDALTypeCodeToNumericTypeCode(img_ds.GetRasterBand(1).DataType))
+    for b in range(features.shape[2]):
+        features[:, :, b] = img_ds.GetRasterBand(b + 1).ReadAsArray()
+    print(features.shape)
+    return features
+
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today = date.today()
+#     today_string = today.strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     input_files = get_input_files(download_dir)
+#     print(f"input_files : {input_files}")
+#     get_features(input_files)
+
+if __name__ == "__main__":
+    collection_name = "SENTINEL-2"
+    resolution = 10  # Define the target resolution (e.g., 10 meters)
+    today = date.today()
+    today_string = today.strftime("%Y-%m-%d")
+    download_dir = f"data/{collection_name}/{today_string}"
+    input_file = f"{download_dir}/stacked/input_stack.tiff"
+    get_features(input_file)
+
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
 #     resolution = 10  # Define the target resolution (e.g., 10 meters)
@@ -202,21 +246,21 @@ def stack_bands_together(input_dir):
 #     download_dir = f"data/{collection_name}/{today_string}"
 #     stack_bands_together(download_dir)
 
-if __name__ == "__main__":
-    collection_name = "SENTINEL-2"
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today_string = date.today().strftime("%Y-%m-%d")
-    download_dir = f"data/{collection_name}/{today_string}"
-    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
-    # get_input_files(download_dir, resolution, bands, features)
-    ground_truth_file = "data/land_cover/selected/cropped_raster.tif"
-    resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
-    stack_bands_together(download_dir)
-    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
-    for input_file in input_files:
-        with rasterio.open(input_file) as src:
-            image_data = src.read()
-            image_shape = image_data.shape
-            print(f"get_input_files|input_file:{input_file}")
-            print(f"get_input_files|image_shape:{image_shape}")
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+#     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+#     # get_input_files(download_dir, resolution, bands, features)
+#     ground_truth_file = "data/land_cover/selected/cropped_raster.tif"
+#     resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
+#     stack_bands_together(download_dir)
+#     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
+#     for input_file in input_files:
+#         with rasterio.open(input_file) as src:
+#             image_data = src.read()
+#             image_shape = image_data.shape
+#             print(f"get_input_files|input_file:{input_file}")
+#             print(f"get_input_files|image_shape:{image_shape}")
