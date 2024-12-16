@@ -68,9 +68,9 @@ def train_model1(labels, data_stack, ground_truth_file, output_file):
     ) as dst:
         dst.write(classified, 1)
 
-def train_model(label_df, input_df, _output_file):
-    X = input_df.to_numpy()
-    y = label_df.to_numpy().ravel()
+def train_model(labels, features, _output_file):
+    X = features
+    y = labels
     print(f"train_model|X:{X.shape}")
     print(f"train_model|y:{y.shape}")
 
@@ -84,7 +84,7 @@ def train_model(label_df, input_df, _output_file):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=1000,
+        n_estimators=500,
         criterion="log_loss",
         random_state=42,
         oob_score=True)
@@ -229,10 +229,10 @@ if __name__ == "__main__":
     input_labels.to_csv("../data/land_cover/selected/updated_labels.csv")
     output_file = "../data/land_cover/selected/classified_raster.tif"
     csv_path = "../data/land_cover/selected/updated_labels.csv"
-    input_labels = pd.read_csv(csv_path, usecols=["CODE_18"])
+    input_labels_df = pd.read_csv(csv_path, usecols=["CODE_18"])
+    input_labels = input_labels_df["CODE_18"].to_numpy()
     print(input_df.dtypes)
     print(f"input_df : {input_df}")
-    print(input_labels.dtypes)
     print(f"input_labels : {input_labels}")
     train_model(input_labels, input_df, output_file)
 
