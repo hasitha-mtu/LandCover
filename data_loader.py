@@ -162,25 +162,25 @@ def get_min_covering(union_polygons):
             print(i, j, len(L))
     return V
 
-# if __name__ == "__main__":
-#     today = date.today()
-#     # today = date.fromisoformat('2024-10-30')
-#     today_string = today.strftime("%Y-%m-%d")
-#     yesterday = today - timedelta(days=1)
-#     yesterday_string = yesterday.strftime("%Y-%m-%d")
-#     selected_area = get_polygon()
-#     print(f"selected_area : {selected_area}")
-#
-#     collection_name = "SENTINEL-2"  # Sentinel satellite
-#     download_dir = f"data/{collection_name}/{today_string}"
-#     print(f"download_dir : {download_dir}")
-#     download_data(download_dir, selected_area, yesterday_string,
-#                   today_string, data_collection=collection_name)
-#     unzip_downloaded_files(download_dir)
-
 if __name__ == "__main__":
+    today = date.today()
+    # today = date.fromisoformat('2024-10-30')
+    today_string = today.strftime("%Y-%m-%d")
+    yesterday = today - timedelta(days=1)
+    yesterday_string = yesterday.strftime("%Y-%m-%d")
+    selected_area = get_polygon()
+    print(f"selected_area : {selected_area}")
+
     collection_name = "SENTINEL-2"  # Sentinel satellite
-    today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"data/{collection_name}/{today_string}"
     print(f"download_dir : {download_dir}")
+    download_data(download_dir, selected_area, yesterday_string,
+                  today_string, data_collection=collection_name)
     unzip_downloaded_files(download_dir)
+
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"  # Sentinel satellite
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     print(f"download_dir : {download_dir}")
+#     unzip_downloaded_files(download_dir)

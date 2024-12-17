@@ -68,7 +68,7 @@ def train_model1(labels, data_stack, ground_truth_file, output_file):
     ) as dst:
         dst.write(classified, 1)
 
-def train_model(labels, features, _output_file):
+def train_model2(labels, features, _output_file):
     X = features
     y = labels
     print(f"train_model|X:{X.shape}")
@@ -112,6 +112,48 @@ def train_model(labels, features, _output_file):
     rasterio.plot.show(classified_flipped, cmap=cmap, ax=ax, title='Land Cover Classification')
     plt.show()
 
+def train_model(labels, features):
+    features_shape = features.shape
+    X = features.reshape((features_shape[0]*features_shape[1], features_shape[2]))
+    y = labels
+    print(f"train_model|X:{X.shape}")
+    print(f"train_model|y:{y.shape}")
+
+    X = normalize(X, norm="l2")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42,  shuffle=True)
+    print('All data include {n} classes: {classes}'.format(n=np.unique(y).size,
+                                                                    classes=np.unique(y)))
+    print('Train data include {n} classes: {classes}'.format(n=np.unique(y_train).size,
+                                                                    classes=np.unique(y_train)))
+    print('Test data include {n} classes: {classes}'.format(n=np.unique(y_test).size,
+                                                                    classes=np.unique(y_test)))
+
+    clf = RandomForestClassifier(
+        n_estimators=500,
+        criterion="log_loss",
+        random_state=42,
+        oob_score=True)
+    clf.fit(X_train, y_train)
+    print('Our OOB prediction of accuracy is: {oob}%'.format(oob=clf.oob_score_ * 100))
+
+    bands = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11]
+    for b, imp in zip(bands, clf.feature_importances_):
+        print('Band {b} importance: {imp}'.format(b=b, imp=imp))
+
+    df = pd.DataFrame()
+    df['truth'] = y_test
+    df['predict'] = clf.predict(X_test)
+    print(pd.crosstab(df['truth'], df['predict'], margins=True))
+
+    y_predict = clf.predict(X)
+    np.savetxt("../data/land_cover/selected/output.txt", y_predict, fmt='%d')
+    classified = y_predict.reshape((features_shape[0], features_shape[1]))
+
+    cmap, legend = load_cmap(file_path = "../config/color_map.json")
+    fig, ax = plt.subplots(figsize=(20, 20))
+    ax.legend(**legend)
+    rasterio.plot.show(classified, cmap=cmap, ax=ax, title='Land Cover Classification')
+    plt.show()
 
 def get_input_files(input_dir):
     print(f"get_input_files|input_dir: {input_dir}")
@@ -218,25 +260,47 @@ if __name__ == "__main__":
     download_dir = f"../data/{collection_name}/{today_string}"
     input_files = get_input_files(download_dir)
     print(f"input_files : {input_files}")
-    # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
-    selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDUI", "NDVI", "NDWI"]
-    # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m"]
-    # selected_bands = ["NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
-    input_df = get_input_dataframe(input_files, selected_bands)
-    input_df.to_csv("../data/land_cover/selected/input_df.csv")
+    input_file = f"{download_dir}/stacked/input_stack.tiff"
+    features = data_preprocessing.get_features(input_file)
     shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
     ground_truth = "../data/land_cover/selected/cropped_raster.tif"
     path = "../config/selected_map.geojson"
     input_labels = get_input_labels(shapefile_path, ground_truth, path)
     input_labels.to_csv("../data/land_cover/selected/updated_labels.csv")
-    output_file = "../data/land_cover/selected/classified_raster.tif"
     csv_path = "../data/land_cover/selected/updated_labels.csv"
     input_labels_df = pd.read_csv(csv_path, usecols=["CODE_18"])
-    input_labels = input_labels_df["CODE_18"].to_numpy()
-    print(input_df.dtypes)
-    print(f"input_df : {input_df}")
-    print(f"input_labels : {input_labels}")
-    train_model(input_labels, input_df, output_file)
+    labels = input_labels_df["CODE_18"].to_numpy()
+    print(f"features : {features}")
+    print(f"labels : {labels}")
+    train_model(labels, features)
+
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today = date.today()
+#     today_string = today.strftime("%Y-%m-%d")
+#     download_dir = f"../data/{collection_name}/{today_string}"
+#     input_files = get_input_files(download_dir)
+#     print(f"input_files : {input_files}")
+#     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
+#     selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDUI", "NDVI", "NDWI"]
+#     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m"]
+#     # selected_bands = ["NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
+#     input_df = get_input_dataframe(input_files, selected_bands)
+#     input_df.to_csv("../data/land_cover/selected/input_df.csv")
+#     shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+#     ground_truth = "../data/land_cover/selected/cropped_raster.tif"
+#     path = "../config/selected_map.geojson"
+#     input_labels = get_input_labels(shapefile_path, ground_truth, path)
+#     input_labels.to_csv("../data/land_cover/selected/updated_labels.csv")
+#     output_file = "../data/land_cover/selected/classified_raster.tif"
+#     csv_path = "../data/land_cover/selected/updated_labels.csv"
+#     input_labels_df = pd.read_csv(csv_path, usecols=["CODE_18"])
+#     input_labels = input_labels_df["CODE_18"].to_numpy()
+#     print(input_df.dtypes)
+#     print(f"input_df : {input_df}")
+#     print(f"input_labels : {input_labels}")
+#     train_model(input_labels, input_df, output_file)
 
 
 # if __name__ == "__main__":
