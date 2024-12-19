@@ -188,6 +188,33 @@ def path_leaf(path):
 def file_name_from_path(path):
     return path_leaf(path).split(".")[0]
 
+def plot_color_map(file_path):
+    lc = json.load(open(file_path))
+    print(lc)
+    lc_df = pd.DataFrame(lc)
+    print(lc_df)
+    values = lc_df["values"].to_list()
+    print(f"values : {values}")
+    palette = lc_df["palette"].to_list()
+    print(f"palette : {palette}")
+    labels = lc_df["label"].to_list()
+    print(f"labels : {labels}")
+    cmap = ListedColormap(palette)
+    print(f"cmap : {cmap}")
+
+    color_data = {'Color Code': palette, 'Land Cover Class': values, 'Description': labels}
+    fig, ax = plt.subplots()
+    table = ax.table(
+        cellText=list(color_data.items()),
+        colLabels=['Color Code', 'Land Cover Class', 'Description'],
+        loc='center'
+    )
+    for i, cell in enumerate(table.get_celld().values()):
+        print(f'cell : {cell}')
+        cell.set_facecolor(color_data['Color Code'][i])
+    ax.axis('off')
+    plt.show()
+
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/cork/clipped_raster.tif"
 #     read_raster(file_path)
@@ -213,12 +240,12 @@ def file_name_from_path(path):
 #     min_area_polygon = get_polygon_from_shapefile(file_path)
 #     print(f"min_area_polygons: {min_area_polygon}")
 
-if __name__ == "__main__":
-    file_path = "config/corine_landcover_2018.tif"
-    min_area_polygon = get_polygon(path="config/selected_map.geojson")
-    output_path = "data/land_cover/selected/selected_area_raster.tif"
-    clip_tiff(file_path, output_path, min_area_polygon)
-    view_tiff("data/land_cover/selected/selected_area_raster.tif")
+# if __name__ == "__main__":
+#     file_path = "config/corine_landcover_2018.tif"
+#     min_area_polygon = get_polygon(path="config/selected_map.geojson")
+#     output_path = "data/land_cover/selected/selected_area_raster.tif"
+#     clip_tiff(file_path, output_path, min_area_polygon)
+#     view_tiff("data/land_cover/selected/selected_area_raster.tif")
 
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/crookstown/raster/U2018_CLC2018_V2020_20u1.tif"
@@ -238,3 +265,12 @@ if __name__ == "__main__":
 #     output_path = "data/land_cover/cork/clipped_raster.tif"
 #     clip_tiff(file_path, output_path, geo_json)
 #     view_tiff("data/land_cover/cork/clipped_raster.tif")
+
+if __name__ == "__main__":
+    file_path = "config/color_map.json"
+    plot_color_map(file_path)
+
+
+
+# if __name__ == "__main__":
+#     view_tiff("data/land_cover/selected/selected_area_raster.tif")
