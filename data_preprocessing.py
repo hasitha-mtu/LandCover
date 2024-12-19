@@ -205,14 +205,14 @@ def get_features(input_file):
 #     print(f"input_files : {input_files}")
 #     get_features(input_files)
 
-if __name__ == "__main__":
-    collection_name = "SENTINEL-2"
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today = date.today()
-    today_string = today.strftime("%Y-%m-%d")
-    download_dir = f"data/{collection_name}/{today_string}"
-    input_file = f"{download_dir}/stacked/input_stack.tiff"
-    get_features(input_file)
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today = date.today()
+#     today_string = today.strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     input_file = f"{download_dir}/stacked/input_stack.tiff"
+#     get_features(input_file)
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
@@ -246,21 +246,21 @@ if __name__ == "__main__":
 #     download_dir = f"data/{collection_name}/{today_string}"
 #     stack_bands_together(download_dir)
 
-# if __name__ == "__main__":
-#     collection_name = "SENTINEL-2"
-#     resolution = 10  # Define the target resolution (e.g., 10 meters)
-#     today_string = date.today().strftime("%Y-%m-%d")
-#     download_dir = f"data/{collection_name}/{today_string}"
-#     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-#     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
-#     # get_input_files(download_dir, resolution, bands, features)
-#     ground_truth_file = "data/land_cover/selected/cropped_raster.tif"
-#     resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
-#     stack_bands_together(download_dir)
-#     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
-#     for input_file in input_files:
-#         with rasterio.open(input_file) as src:
-#             image_data = src.read()
-#             image_shape = image_data.shape
-#             print(f"get_input_files|input_file:{input_file}")
-#             print(f"get_input_files|image_shape:{image_shape}")
+if __name__ == "__main__":
+    collection_name = "SENTINEL-2"
+    resolution = 10  # Define the target resolution (e.g., 10 meters)
+    today_string = date.today().strftime("%Y-%m-%d")
+    download_dir = f"data/{collection_name}/{today_string}"
+    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+    # get_input_files(download_dir, resolution, bands, features)
+    ground_truth_file = "data/land_cover/selected/cropped_raster.tif"
+    resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
+    stack_bands_together(download_dir)
+    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
+    for input_file in input_files:
+        with rasterio.open(input_file) as src:
+            image_data = src.read()
+            image_shape = image_data.shape
+            print(f"get_input_files|input_file:{input_file}")
+            print(f"get_input_files|image_shape:{image_shape}")

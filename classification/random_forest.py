@@ -84,7 +84,7 @@ def train_model(labels, features):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=10000,
+        n_estimators=1000,
         criterion="gini",
         random_state=42,
         n_jobs=10,
@@ -187,6 +187,7 @@ def get_input_dataframe(file_paths, selected, latlon_crs = 'epsg:4326'):
         result_df = pd.merge(result_df, df, how="left", on=["lat", "lon"])
     print(result_df.head())
     print(result_df.shape)
+    result_df.to_csv("../data/land_cover/selected/total_df.csv")
     input_df = result_df[selected]
     return input_df
 
