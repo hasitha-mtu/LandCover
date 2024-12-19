@@ -3,6 +3,7 @@ import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy
 import pandas as pd
 import rasterio.plot
 from matplotlib.colors import ListedColormap
@@ -195,24 +196,35 @@ def plot_color_map(file_path):
     print(lc_df)
     values = lc_df["values"].to_list()
     print(f"values : {values}")
+    print(f"values length : {len(values)}")
     palette = lc_df["palette"].to_list()
     print(f"palette : {palette}")
+    print(f"palette length : {len(palette)}")
     labels = lc_df["label"].to_list()
     print(f"labels : {labels}")
-    cmap = ListedColormap(palette)
-    print(f"cmap : {cmap}")
+    print(f"labels length : {len(labels)}")
 
-    color_data = {'Color Code': palette, 'Land Cover Class': values, 'Description': labels}
-    fig, ax = plt.subplots()
-    table = ax.table(
-        cellText=list(color_data.items()),
-        colLabels=['Color Code', 'Land Cover Class', 'Description'],
-        loc='center'
-    )
-    for i, cell in enumerate(table.get_celld().values()):
-        print(f'cell : {cell}')
-        cell.set_facecolor(color_data['Color Code'][i])
-    ax.axis('off')
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, len(palette) * 0.1))  # Adjust height based on number of rows
+    ax.axis("tight")
+    ax.axis("off")
+
+    # Create table data
+    table_data = [["Color", "Description"]] + [[hex_code, desc] for hex_code, desc in zip(palette, labels)]
+
+    # Create the table
+    table = ax.table(cellText=table_data, loc="center", cellLoc="center")
+
+    # Apply color to the cells in the "Color" column
+    for i, hex_code in enumerate(palette, start=1):  # Skip header row
+        table[(i, 0)].set_facecolor(hex_code)
+
+    # Adjust font size and layout
+    table.auto_set_font_size(False)
+    table.set_fontsize(12)
+    table.auto_set_column_width([0, 1])
+
+    # Show the plot
     plt.show()
 
 # if __name__ == "__main__":
