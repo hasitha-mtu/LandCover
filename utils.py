@@ -214,11 +214,11 @@ def file_name_from_path(path):
 #     print(f"min_area_polygons: {min_area_polygon}")
 
 if __name__ == "__main__":
-    file_path = "data/land_cover/selected/U2018_CLC2018_V2020_20u1.tif"
+    file_path = "config/corine_landcover_2018.tif"
     min_area_polygon = get_polygon(path="config/selected_map.geojson")
-    output_path = "data/land_cover/selected/cropped_raster.tif"
+    output_path = "data/land_cover/selected/selected_area_raster.tif"
     clip_tiff(file_path, output_path, min_area_polygon)
-    view_tiff("data/land_cover/selected/cropped_raster.tif")
+    view_tiff("data/land_cover/selected/selected_area_raster.tif")
 
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/crookstown/raster/U2018_CLC2018_V2020_20u1.tif"
