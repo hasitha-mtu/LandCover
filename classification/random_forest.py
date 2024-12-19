@@ -102,8 +102,8 @@ def train_model(labels, features):
     print(pd.crosstab(df['truth'], df['predict'], margins=True))
 
     y_predict = clf.predict(X)
-    np.savetxt("../data/land_cover/selected/output.txt", y_predict, fmt='%d')
-    classified = y_predict.reshape((305, 705))
+    np.savetxt("../data/land_cover/selected/output_19.txt", y_predict, fmt='%d')
+    classified = y_predict.reshape((306, 680))
     classified_flipped = np.flip(classified, axis=0)
 
     cmap, legend = load_cmap(file_path = "../config/color_map.json")
@@ -290,18 +290,21 @@ if __name__ == "__main__":
     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m"]
     # selected_bands = ["NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
     input_df = get_input_dataframe(input_files, selected_bands)
-    input_df.to_csv("../data/land_cover/selected/input_df.csv")
+    input_df.to_csv("../data/land_cover/selected/input_features.csv")
+    input_df.to_csv(f"{download_dir}/input_features.csv")
     shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
-    ground_truth = "../data/land_cover/selected/cropped_raster.tif"
+    ground_truth = "../data/land_cover/selected/selected_area_raster.tif"
     path = "../config/selected_map.geojson"
     input_labels = get_input_labels(shapefile_path, ground_truth, path)
-    input_labels.to_csv("../data/land_cover/selected/updated_labels.csv")
-    csv_path = "../data/land_cover/selected/updated_labels.csv"
-    input_labels_df = pd.read_csv(csv_path, usecols=["CODE_18"])
+    label_path = f"{download_dir}/selected_area_labels.csv"
+    input_labels.to_csv(label_path)
+    input_labels_df = pd.read_csv(label_path, usecols=["CODE_18"])
     input_labels = input_labels_df["CODE_18"].to_numpy()
     print(input_df.dtypes)
     print(f"input_df : {input_df}")
+    print(f"input_df shape : {input_df.shape}")
     print(f"input_labels : {input_labels}")
+    print(f"input_labels shape: {input_labels.shape}")
     train_model(input_labels, input_df)
 
 
