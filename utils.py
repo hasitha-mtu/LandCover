@@ -205,12 +205,12 @@ def plot_color_map(file_path):
     print(f"labels length : {len(labels)}")
 
     # Create a figure and axis
-    fig, ax = plt.subplots(figsize=(10, len(palette) * 0.1))  # Adjust height based on number of rows
+    fig, ax = plt.subplots(figsize=(20, len(palette) * 0.2))  # Adjust height based on number of rows
     ax.axis("tight")
     ax.axis("off")
 
     # Create table data
-    table_data = [["Color", "Description"]] + [[hex_code, desc] for hex_code, desc in zip(palette, labels)]
+    table_data = [["Color", "Description"]] + [[value, desc] for value, desc in zip(values, labels)]
 
     # Create the table
     table = ax.table(cellText=table_data, loc="center", cellLoc="center")
