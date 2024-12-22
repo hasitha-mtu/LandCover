@@ -254,7 +254,8 @@ if __name__ == "__main__":
     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
     # get_input_files(download_dir, resolution, bands, features)
-    ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
+    # ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
+    ground_truth_file = "data/land_cover/selected/area_reference.tiff"
     resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
     stack_bands_together(download_dir)
     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")

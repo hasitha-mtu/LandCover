@@ -84,7 +84,7 @@ def train_model(labels, features):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=1000,
+        n_estimators=500,
         criterion="gini",
         random_state=42,
         n_jobs=10,
@@ -102,8 +102,8 @@ def train_model(labels, features):
     print(pd.crosstab(df['truth'], df['predict'], margins=True))
 
     y_predict = clf.predict(X)
-    np.savetxt("../data/land_cover/selected/output_19.txt", y_predict, fmt='%d')
-    classified = y_predict.reshape((306, 680))
+    np.savetxt("../data/land_cover/selected/output_22.txt", y_predict, fmt='%d')
+    classified = y_predict.reshape((992, 3693))
     classified_flipped = np.flip(classified, axis=0)
 
     cmap, legend = load_cmap(file_path = "../config/color_map.json")
@@ -293,8 +293,8 @@ if __name__ == "__main__":
     input_df.to_csv("../data/land_cover/selected/input_features.csv")
     input_df.to_csv(f"{download_dir}/input_features.csv")
     shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
-    ground_truth = "../data/land_cover/selected/selected_area_raster.tif"
-    path = "../config/selected_map.geojson"
+    ground_truth = "../data/land_cover/selected/area_reference.tiff"
+    path = "../config/smaller_selected_map.geojson"
     input_labels = get_input_labels(shapefile_path, ground_truth, path)
     label_path = f"{download_dir}/selected_area_labels.csv"
     input_labels.to_csv(label_path)
