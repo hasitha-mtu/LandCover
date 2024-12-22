@@ -1,5 +1,5 @@
 import glob
-from datetime import date, timedelta
+from datetime import date
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -84,7 +84,7 @@ def train_model(labels, features):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=500,
+        n_estimators=100,
         criterion="gini",
         random_state=42,
         n_jobs=10,
@@ -194,7 +194,7 @@ def get_input_dataframe(file_paths, selected, latlon_crs = 'epsg:4326'):
 def get_input_labels1(shapefile_path, ground_truth):
     gdf = gpd.read_file(shapefile_path)
     print(f"get_input_labels|gdf : {gdf}")
-    df = get_data_frame(ground_truth)
+    df = utils.get_data_frame(ground_truth)
     df['code'] = np.full(df.shape[0] , 999, dtype=int)
     print(f"get_input_labels|df shape : {df.shape}")
     for i, row in df.iterrows():
@@ -206,22 +206,10 @@ def get_input_labels1(shapefile_path, ground_truth):
 
 def get_input_labels2(shapefile_path, ground_truth):
     gdf = gpd.read_file(shapefile_path)
-    df = get_data_frame(ground_truth)
+    df = utils.get_data_frame(ground_truth)
     gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
     joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
     polygon = utils.get_polygon_from_shapefile(file_path = "../data/land_cover/crookstown/wgs84/crookstown.shp")
-    for i, row in joined_df.iterrows():
-        point = Point(row['lat'], row['lon'])
-        if not polygon.contains(point):
-            joined_df.at[i, 'CODE_18'] = 999
-    return joined_df[["lat", "lon", "value", "CODE_18"]]
-
-def get_input_labels(shapefile_path, ground_truth, polygon_path):
-    gdf = gpd.read_file(shapefile_path)
-    df = get_data_frame(ground_truth)
-    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
-    joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
-    polygon = utils.get_polygon(path = polygon_path)
     for i, row in joined_df.iterrows():
         point = Point(row['lat'], row['lon'])
         if not polygon.contains(point):
@@ -237,23 +225,7 @@ def point_contains(point, gdf):
             code = row['CODE_18']
     return code
 
-def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
-    print(f"get_data_frame|file_path : {file_path}")
-    with rasterio.open(file_path) as f:
-        zz = f.read(1)
-        x = np.linspace(f.bounds.left, f.bounds.right, f.shape[1])
-        y = np.linspace(f.bounds.bottom, f.bounds.top, f.shape[0])
-        xx, yy = np.meshgrid(x, y)
-        df = pd.DataFrame({
-            'x': xx.flatten(),
-            'y': yy.flatten(),
-            'value': zz.flatten(),
-        })
-        transformer = Transformer.from_crs(f.crs, latlon_crs, always_xy=False)
-        df['lat'], df['lon'] = transformer.transform(xx=df.x, yy=df.y)
-        df.drop(columns=['x', 'y'], inplace=True)
-        df = df[['lat', 'lon', 'value']]
-        return df
+
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
@@ -292,12 +264,7 @@ if __name__ == "__main__":
     input_df = get_input_dataframe(input_files, selected_bands)
     input_df.to_csv("../data/land_cover/selected/input_features.csv")
     input_df.to_csv(f"{download_dir}/input_features.csv")
-    shapefile_path = "../data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
-    ground_truth = "../data/land_cover/selected/area_reference.tiff"
-    path = "../config/smaller_selected_map.geojson"
-    input_labels = get_input_labels(shapefile_path, ground_truth, path)
     label_path = f"{download_dir}/selected_area_labels.csv"
-    input_labels.to_csv(label_path)
     input_labels_df = pd.read_csv(label_path, usecols=["CODE_18"])
     input_labels = input_labels_df["CODE_18"].to_numpy()
     print(input_df.dtypes)
