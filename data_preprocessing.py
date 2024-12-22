@@ -5,13 +5,15 @@ from datetime import date
 
 import geopandas as gpd
 import numpy as np
-import pandas as pd
 import rasterio
-from pyproj import Transformer
-from rasterio.warp import reproject, Resampling
-
 # Import GDAL, NumPy, and matplotlib
 from osgeo import gdal, gdal_array
+from rasterio.warp import reproject, Resampling
+from shapely.geometry import Point
+
+import utils
+from utils import get_data_frame
+
 
 def get_input_files(dir_path, resolution = 10,
                     selected_bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'],
@@ -133,23 +135,6 @@ def get_data_stack(file_paths):
             bands_and_features.append(src.read(1))
     return np.stack(bands_and_features)
 
-def get_data_frame(file_paths, latlon_crs = 'epsg:4326'):
-    for file_path in file_paths:
-        with rasterio.open(file_path) as f:
-            zz = f.read(1)
-            x = np.linspace(f.bounds.left, f.bounds.right, f.shape[1])
-            y = np.linspace(f.bounds.bottom, f.bounds.top, f.shape[0])
-        xx, yy = np.meshgrid(x, y)
-        df = pd.DataFrame({
-            'x': xx.flatten(),
-            'y': yy.flatten(),
-            'value': zz.flatten(),
-        })
-        transformer = Transformer.from_crs(f.crs, latlon_crs, always_xy=False)
-        df['lat'], df['lon'] = transformer.transform(xx=df.x, yy=df.y)
-        df.drop(columns=['x', 'y'], inplace=True)
-        print(df.head())
-
 def crop_shape_file(shape_file, geojson_file):
     shapefile = gpd.read_file(shape_file)
     geojson = gpd.read_file(geojson_file)
@@ -194,6 +179,61 @@ def get_features(input_file):
         features[:, :, b] = img_ds.GetRasterBand(b + 1).ReadAsArray()
     print(features.shape)
     return features
+
+def get_input_labels1(shapefile_path, ground_truth, polygon_path):
+    gdf = gpd.read_file(shapefile_path)
+    print(f'get_input_labels|shapefile shape:{gdf.shape}')
+    print(f'get_input_labels|gdf columns:{gdf.columns.values}')
+    df = get_data_frame(ground_truth)
+    print(f'get_input_labels|ground_truth shape:{df.shape}')
+    print(f'get_input_labels|df columns:{df.columns.values}')
+    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
+    joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
+    polygon = utils.get_polygon(path = polygon_path)
+    for i, row in joined_df.iterrows():
+        point = Point(row['lat'], row['lon'])
+        if not polygon.contains(point):
+            joined_df.at[i, 'CODE_18'] = 999
+    return joined_df[["lat", "lon", "value", "CODE_18"]]
+
+def get_input_labels2(shapefile_path, ground_truth, polygon_path):
+    gdf = gpd.read_file(shapefile_path)
+    print(f'get_input_labels|shapefile shape:{gdf.shape}')
+    print(f'get_input_labels|gdf columns:{gdf.columns.values}')
+    df = get_data_frame(ground_truth)
+    print(f'get_input_labels|ground_truth shape:{df.shape}')
+    print(f'get_input_labels|df columns:{df.columns.values}')
+    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
+    joined_df = gdf_points.sjoin(gdf, how='left', predicate='contains')
+    polygon = utils.get_polygon(path = polygon_path)
+    for i, row in joined_df.iterrows():
+        point = Point(row['lat'], row['lon'])
+        if not polygon.contains(point):
+            joined_df.at[i, 'CODE_18'] = 999
+    return joined_df[["lat", "lon", "value", "CODE_18"]]
+
+def get_input_labels(shapefile_path, ground_truth, polygon_path):
+    gdf = gpd.read_file(shapefile_path)
+    print(f'get_input_labels|shapefile shape:{gdf.shape}')
+    print(f'get_input_labels|gdf columns:{gdf.columns.values}')
+    df = get_data_frame(ground_truth)
+    print(f'get_input_labels|ground_truth shape:{df.shape}')
+    print(f'get_input_labels|df columns:{df.columns.values}')
+    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
+    joined_df = gdf_points.sjoin(gdf, how='left', predicate='intersects')
+    polygon = utils.get_polygon(path = polygon_path)
+    for i, row in joined_df.iterrows():
+        point = Point(row['lat'], row['lon'])
+        if not polygon.contains(point):
+            joined_df.at[i, 'CODE_18'] = 999
+    return joined_df[["lat", "lon", "value", "CODE_18"]]
+
+def generate_labels(download_dir, shapefile_path, ground_truth, geojson_path):
+    input_labels = get_input_labels(shapefile_path, ground_truth, geojson_path)
+    print(f'generate_labels|input_labels shape:{input_labels.shape}')
+    print(f'generate_labels|input_labels columns:{input_labels.columns.values}')
+    label_path = f"{download_dir}/selected_area_labels.csv"
+    input_labels.to_csv(label_path)
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
@@ -251,17 +291,36 @@ if __name__ == "__main__":
     resolution = 10  # Define the target resolution (e.g., 10 meters)
     today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"data/{collection_name}/{today_string}"
-    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
-    # get_input_files(download_dir, resolution, bands, features)
-    # ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
-    ground_truth_file = "data/land_cover/selected/area_reference.tiff"
-    resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
-    stack_bands_together(download_dir)
-    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
-    for input_file in input_files:
-        with rasterio.open(input_file) as src:
-            image_data = src.read()
-            image_shape = image_data.shape
-            print(f"get_input_files|input_file:{input_file}")
-            print(f"get_input_files|image_shape:{image_shape}")
+
+    shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+    ground_truth = "data/land_cover/selected/area_reference.tiff"
+    geojson_path = "config/smaller_selected_map.geojson"
+    generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
+
+
+
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+#     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+#     # get_input_files(download_dir, resolution, bands, features)
+#     # ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
+#     ground_truth_file = "data/land_cover/selected/area_reference.tiff"
+#     resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
+#     stack_bands_together(download_dir)
+#     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
+#
+#     shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+#     ground_truth = "data/land_cover/selected/area_reference.tiff"
+#     geojson_path = "config/smaller_selected_map.geojson"
+#     generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
+#
+#     for input_file in input_files:
+#         with rasterio.open(input_file) as src:
+#             image_data = src.read()
+#             image_shape = image_data.shape
+#             print(f"get_input_files|input_file:{input_file}")
+#             print(f"get_input_files|image_shape:{image_shape}")

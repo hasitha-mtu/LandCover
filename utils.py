@@ -1,20 +1,21 @@
 import json
+import ntpath
 import os
 
+import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
 import pandas as pd
+import rasterio
 import rasterio.plot
 from matplotlib.colors import ListedColormap
+from pyproj import Transformer
+from rasterio.mask import mask
 from sentinelsat import read_geojson
 from shapely.geometry import shape
-from rasterio.mask import mask
-import geopandas as gpd
-import numpy as np
-import rasterio
 from shapely.ops import unary_union
-import ntpath
+
 
 def load_cmap(file_path = "config/color_map.json"):
     # Color map is https://collections.sentinel-hub.com/corine-land-cover/readme.html
@@ -227,6 +228,24 @@ def plot_color_map(file_path):
     # Show the plot
     plt.show()
 
+def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
+    print(f"get_data_frame|file_path : {file_path}")
+    with rasterio.open(file_path) as f:
+        zz = f.read(1)
+        x = np.linspace(f.bounds.left, f.bounds.right, f.shape[1])
+        y = np.linspace(f.bounds.bottom, f.bounds.top, f.shape[0])
+        xx, yy = np.meshgrid(x, y)
+        df = pd.DataFrame({
+            'x': xx.flatten(),
+            'y': yy.flatten(),
+            'value': zz.flatten(),
+        })
+        transformer = Transformer.from_crs(f.crs, latlon_crs, always_xy=False)
+        df['lat'], df['lon'] = transformer.transform(xx=df.x, yy=df.y)
+        df.drop(columns=['x', 'y'], inplace=True)
+        df = df[['lat', 'lon', 'value']]
+        return df
+
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/cork/clipped_raster.tif"
 #     read_raster(file_path)
@@ -254,7 +273,7 @@ def plot_color_map(file_path):
 
 if __name__ == "__main__":
     file_path = "config/corine_landcover_2018.tif"
-    min_area_polygon = get_polygon(path="config/selected_map.geojson")
+    min_area_polygon = get_polygon(path="config/smaller_selected_map.geojson")
     output_path = "data/land_cover/selected/selected_area_raster.tif"
     clip_tiff(file_path, output_path, min_area_polygon)
     view_tiff("data/land_cover/selected/selected_area_raster.tif")
