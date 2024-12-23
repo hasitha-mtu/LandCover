@@ -42,6 +42,30 @@ def load_cmap(file_path = "config/color_map.json"):
     }
     return cmap, legend
 
+def load_cmap_selected(picked, file_path = "config/color_map.json"):
+    # Color map is https://collections.sentinel-hub.com/corine-land-cover/readme.html
+    lc = json.load(open(file_path))
+    lc_df = pd.DataFrame(lc)
+    lc_df = lc_df.loc[lc_df['values'].isin(picked)]
+    values = lc_df["values"].to_list()
+    palette = lc_df["palette"].to_list()
+    labels = lc_df["label"].to_list()
+
+    # Create colormap from values and palette
+    cmap = ListedColormap(palette)
+
+    # Patches legend
+    patches = [
+        mpatches.Patch(color=palette[i], label=labels[i]) for i in range(len(values))
+    ]
+    legend = {
+        "handles": patches,
+        "bbox_to_anchor": (1.05, 1),
+        "loc": 2,
+        "borderaxespad": 0.0,
+    }
+    return cmap, legend
+
 def view_tiff(file_path, title="Land Cover"):
     tiff = rasterio.open(file_path)
     print(f"view_tiff|tiff:{tiff}")
