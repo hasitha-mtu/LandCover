@@ -84,7 +84,7 @@ def train_model(labels, features):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=100,
+        n_estimators=500,
         criterion="gini",
         random_state=42,
         n_jobs=10,
