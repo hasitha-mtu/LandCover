@@ -196,7 +196,7 @@ def get_input_labels1(shapefile_path, ground_truth, polygon_path):
             joined_df.at[i, 'CODE_18'] = 999
     return joined_df[["lat", "lon", "value", "CODE_18"]]
 
-def get_input_labels2(shapefile_path, ground_truth, polygon_path):
+def get_input_labels3(shapefile_path, ground_truth, polygon_path):
     gdf = gpd.read_file(shapefile_path)
     print(f'get_input_labels|shapefile shape:{gdf.shape}')
     print(f'get_input_labels|gdf columns:{gdf.columns.values}')
@@ -220,6 +220,18 @@ def get_input_labels(shapefile_path, ground_truth, polygon_path):
     print(f'get_input_labels|ground_truth shape:{df.shape}')
     print(f'get_input_labels|df columns:{df.columns.values}')
     gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
+    joined_df = gdf_points.sjoin(gdf, how='left', predicate='contains')
+    joined_df.dropna(axis=0)
+    return joined_df[["lat", "lon", "value", "CODE_18"]]
+
+def get_input_labels2(shapefile_path, ground_truth, polygon_path):
+    gdf = gpd.read_file(shapefile_path)
+    print(f'get_input_labels|shapefile shape:{gdf.shape}')
+    print(f'get_input_labels|gdf columns:{gdf.columns.values}')
+    df = get_data_frame(ground_truth)
+    print(f'get_input_labels|ground_truth shape:{df.shape}')
+    print(f'get_input_labels|df columns:{df.columns.values}')
+    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
     joined_df = gdf_points.sjoin(gdf, how='left', predicate='intersects')
     polygon = utils.get_polygon(path = polygon_path)
     for i, row in joined_df.iterrows():
@@ -234,6 +246,7 @@ def generate_labels(download_dir, shapefile_path, ground_truth, geojson_path):
     print(f'generate_labels|input_labels columns:{input_labels.columns.values}')
     label_path = f"{download_dir}/selected_area_labels.csv"
     input_labels.to_csv(label_path)
+    print(f'generate_labels|file {label_path} created')
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
