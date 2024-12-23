@@ -68,7 +68,7 @@ def train_model1(labels, data_stack, ground_truth_file, output_file):
     ) as dst:
         dst.write(classified, 1)
 
-def train_model(labels, features):
+def train_model(output_path, labels, features):
     X = features
     y = labels
     print(f"train_model|X:{X.shape}")
@@ -84,7 +84,7 @@ def train_model(labels, features):
                                                                     classes=np.unique(y_test)))
 
     clf = RandomForestClassifier(
-        n_estimators=500,
+        n_estimators=1000,
         criterion="gini",
         random_state=42,
         n_jobs=10,
@@ -102,14 +102,15 @@ def train_model(labels, features):
     print(pd.crosstab(df['truth'], df['predict'], margins=True))
 
     y_predict = clf.predict(X)
-    np.savetxt("../data/land_cover/selected/output_22.txt", y_predict, fmt='%d')
-    classified = y_predict.reshape((992, 3693))
-    classified_flipped = np.flip(classified, axis=0)
-
+    np.savetxt(f"{output_path}/classification_output.csv", y_predict, fmt='%d')
+    classified = y_predict.reshape((631, 1524))
+    # classified_flipped = np.flip(classified, axis=0)
+    # utils.compare_with_ground_truth(output_path, classified)
     cmap, legend = load_cmap(file_path = "../config/color_map.json")
     fig, ax = plt.subplots(figsize=(20, 20))
     ax.legend(**legend)
-    rasterio.plot.show(classified_flipped, cmap=cmap, ax=ax, title='Land Cover Classification')
+    rasterio.plot.show(classified, cmap=cmap, ax=ax, title='Land Cover Classification')
+    plt.savefig(f"{output_path}/classification_output.png")
     plt.show()
 
 def train_model2(labels, features):
@@ -272,7 +273,7 @@ if __name__ == "__main__":
     print(f"input_df shape : {input_df.shape}")
     print(f"input_labels : {input_labels}")
     print(f"input_labels shape: {input_labels.shape}")
-    train_model(input_labels, input_df)
+    train_model(download_dir, input_labels, input_df)
 
 
 # if __name__ == "__main__":
