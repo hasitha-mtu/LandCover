@@ -1,6 +1,7 @@
 import json
 import ntpath
 import os
+from datetime import date
 
 import geopandas as gpd
 import matplotlib.patches as mpatches
@@ -57,7 +58,7 @@ def clip_tiff(tiff_path, output_path, roi_polygon):
     with rasterio.open(tiff_path) as src:
         out_image, out_transform = mask(src, [shape(roi_polygon)], crop=True)
         print(f"out_image.shape: {out_image.shape}")
-        out_meta = src.meta.copy()
+        out_meta = src.meta
         out_meta.update({"driver": "GTiff",
                          "height": out_image.shape[1],
                          "width": out_image.shape[2],
@@ -228,6 +229,47 @@ def plot_color_map(file_path):
     # Show the plot
     plt.show()
 
+def plot_color_map_selected(file_path, picked):
+    lc = json.load(open(file_path))
+    print(lc)
+    lc_df = pd.DataFrame(lc)
+    print(lc_df)
+
+    lc_df = lc_df.loc[lc_df['values'].isin(picked)]
+
+    values = lc_df["values"].to_list()
+    print(f"values : {values}")
+    print(f"values length : {len(values)}")
+    palette = lc_df["palette"].to_list()
+    print(f"palette : {palette}")
+    print(f"palette length : {len(palette)}")
+    labels = lc_df["label"].to_list()
+    print(f"labels : {labels}")
+    print(f"labels length : {len(labels)}")
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(20, len(palette) * 0.2))  # Adjust height based on number of rows
+    ax.axis("tight")
+    ax.axis("off")
+
+    # Create table data
+    table_data = [["Color", "Description"]] + [[value, desc] for value, desc in zip(values, labels)]
+
+    # Create the table
+    table = ax.table(cellText=table_data, loc="center", cellLoc="center")
+
+    # Apply color to the cells in the "Color" column
+    for i, hex_code in enumerate(palette, start=1):  # Skip header row
+        table[(i, 0)].set_facecolor(hex_code)
+
+    # Adjust font size and layout
+    table.auto_set_font_size(False)
+    table.set_fontsize(12)
+    table.auto_set_column_width([0, 1])
+
+    # Show the plot
+    plt.show()
+
 def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
     print(f"get_data_frame|file_path : {file_path}")
     with rasterio.open(file_path) as f:
@@ -245,6 +287,22 @@ def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
         df.drop(columns=['x', 'y'], inplace=True)
         df = df[['lat', 'lon', 'value']]
         return df
+
+def compare_with_ground_truth(path, predicted):
+    ground_truth = f"{path}/ground_truth.tif"
+    cmap, legend = load_cmap(file_path="../config/color_map.json")
+
+    with rasterio.open(ground_truth) as f:
+        actual = f.read(1)
+        fig, axs = plt.subplots(nrows=2, sharex=True, figsize=(20, 20))
+        axs[0].set_title('Ground truth')
+        axs[0].imshow(actual, origin='upper', cmap=cmap)
+
+        axs[1].set_title('Predicted')
+        axs[1].imshow(predicted, origin='lower', cmap=cmap)
+
+        plt.savefig(f"{path}/classification_output.png")
+        plt.show()
 
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/cork/clipped_raster.tif"
@@ -271,12 +329,14 @@ def get_data_frame(file_path, latlon_crs = 'epsg:4326'):
 #     min_area_polygon = get_polygon_from_shapefile(file_path)
 #     print(f"min_area_polygons: {min_area_polygon}")
 
-if __name__ == "__main__":
-    file_path = "config/corine_landcover_2018.tif"
-    min_area_polygon = get_polygon(path="config/smaller_selected_map.geojson")
-    output_path = "data/land_cover/selected/selected_area_raster.tif"
-    clip_tiff(file_path, output_path, min_area_polygon)
-    view_tiff("data/land_cover/selected/selected_area_raster.tif")
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     file_path = "config/corine_landcover_2018.tif"
+#     min_area_polygon = get_polygon_from_shapefile()
+#     output_path = f"{download_dir}/ground_truth.tif"
+#     clip_tiff(file_path, output_path, min_area_polygon)
 
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/crookstown/raster/U2018_CLC2018_V2020_20u1.tif"
@@ -299,7 +359,8 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     file_path = "config/color_map.json"
-    plot_color_map(file_path)
+    # plot_color_map(file_path)
+    plot_color_map_selected(file_path, [112, 131, 211, 231, 243, 311, 312, 313, 324, 999])
 
 
 

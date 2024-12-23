@@ -10,7 +10,7 @@ import rasterio
 from osgeo import gdal, gdal_array
 from rasterio.warp import reproject, Resampling
 from shapely.geometry import Point
-
+from utils import get_polygon_from_shapefile as get_polygon
 import utils
 from utils import get_data_frame
 
@@ -180,7 +180,7 @@ def get_features(input_file):
     print(features.shape)
     return features
 
-def get_input_labels(shapefile_path, ground_truth, polygon_path):
+def get_input_labels(shapefile_path, ground_truth, _polygon_path):
     gdf = gpd.read_file(shapefile_path)
     print(f'get_input_labels|shapefile shape:{gdf.shape}')
     print(f'get_input_labels|gdf columns:{gdf.columns.values}')
@@ -189,7 +189,7 @@ def get_input_labels(shapefile_path, ground_truth, polygon_path):
     print(f'get_input_labels|df columns:{df.columns.values}')
     gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
     joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
-    polygon = utils.get_polygon(path = polygon_path)
+    polygon = get_polygon()
     for i, row in joined_df.iterrows():
         point = Point(row['lat'], row['lon'])
         if not polygon.contains(point):
