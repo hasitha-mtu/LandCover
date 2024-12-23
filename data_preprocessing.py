@@ -286,41 +286,41 @@ def generate_labels(download_dir, shapefile_path, ground_truth, geojson_path):
 #     download_dir = f"data/{collection_name}/{today_string}"
 #     stack_bands_together(download_dir)
 
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#
+#     shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+#     ground_truth = "data/land_cover/selected/area_reference.tiff"
+#     geojson_path = "config/smaller_selected_map.geojson"
+#     generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
+
+
+
 if __name__ == "__main__":
     collection_name = "SENTINEL-2"
     resolution = 10  # Define the target resolution (e.g., 10 meters)
     today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"data/{collection_name}/{today_string}"
+    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+    # get_input_files(download_dir, resolution, bands, features)
+    # ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
+    ground_truth_file = "data/land_cover/selected/area_reference.tiff"
+    resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
+    stack_bands_together(download_dir)
+    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
 
     shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
     ground_truth = "data/land_cover/selected/area_reference.tiff"
     geojson_path = "config/smaller_selected_map.geojson"
     generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
 
-
-
-# if __name__ == "__main__":
-#     collection_name = "SENTINEL-2"
-#     resolution = 10  # Define the target resolution (e.g., 10 meters)
-#     today_string = date.today().strftime("%Y-%m-%d")
-#     download_dir = f"data/{collection_name}/{today_string}"
-#     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-#     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
-#     # get_input_files(download_dir, resolution, bands, features)
-#     # ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
-#     ground_truth_file = "data/land_cover/selected/area_reference.tiff"
-#     resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
-#     stack_bands_together(download_dir)
-#     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
-#
-#     shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
-#     ground_truth = "data/land_cover/selected/area_reference.tiff"
-#     geojson_path = "config/smaller_selected_map.geojson"
-#     generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
-#
-#     for input_file in input_files:
-#         with rasterio.open(input_file) as src:
-#             image_data = src.read()
-#             image_shape = image_data.shape
-#             print(f"get_input_files|input_file:{input_file}")
-#             print(f"get_input_files|image_shape:{image_shape}")
+    for input_file in input_files:
+        with rasterio.open(input_file) as src:
+            image_data = src.read()
+            image_shape = image_data.shape
+            print(f"get_input_files|input_file:{input_file}")
+            print(f"get_input_files|image_shape:{image_shape}")
