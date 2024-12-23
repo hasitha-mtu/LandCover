@@ -180,7 +180,7 @@ def get_features(input_file):
     print(features.shape)
     return features
 
-def get_input_labels1(shapefile_path, ground_truth, polygon_path):
+def get_input_labels(shapefile_path, ground_truth, polygon_path):
     gdf = gpd.read_file(shapefile_path)
     print(f'get_input_labels|shapefile shape:{gdf.shape}')
     print(f'get_input_labels|gdf columns:{gdf.columns.values}')
@@ -196,7 +196,7 @@ def get_input_labels1(shapefile_path, ground_truth, polygon_path):
             joined_df.at[i, 'CODE_18'] = 999
     return joined_df[["lat", "lon", "value", "CODE_18"]]
 
-def get_input_labels(shapefile_path, ground_truth, polygon_path):
+def get_input_labels1(shapefile_path, ground_truth, polygon_path):
     gdf = gpd.read_file(shapefile_path)
     print(f'get_input_labels|shapefile shape:{gdf.shape}')
     print(f'get_input_labels|gdf columns:{gdf.columns.values}')
