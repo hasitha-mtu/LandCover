@@ -71,7 +71,7 @@ def resample_images(target_resolution, source_dir, resolution_list=None, band_li
 
 if __name__ == "__main__":
     collection_name = "SENTINEL-2"
-    resolution = 10 # Define the target resolution (e.g., 10 meters)
+    resolution = 10 #  Define the target resolution (e.g., 10 meters)
     today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"data/{collection_name}/{today_string}"
     print(f"download_dir : {download_dir}")
