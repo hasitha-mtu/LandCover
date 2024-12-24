@@ -14,8 +14,70 @@ from matplotlib.colors import ListedColormap
 from pyproj import Transformer
 from rasterio.mask import mask
 from sentinelsat import read_geojson
-from shapely.geometry import shape
 from shapely.ops import unary_union
+
+from rasterio.features import rasterize, shapes
+from rasterio.transform import from_origin
+from scipy.ndimage import zoom
+from shapely.geometry import shape
+
+
+def resample_shapefile(input_shapefile, output_shapefile, original_resolution, target_resolution):
+    print(f"resample_shapefile|input_shapefile: {input_shapefile}")
+    print(f"resample_shapefile|output_shapefile: {output_shapefile}")
+    print(f"resample_shapefile|original_resolution: {original_resolution}")
+    print(f"resample_shapefile|target_resolution: {target_resolution}")
+    gdf = gpd.read_file(input_shapefile)
+    print(f"resample_shapefile|gdf: {gdf}")
+    # Step 2: Define raster parameters (100m resolution as input)
+    bounds = gdf.total_bounds  # [minx, miny, maxx, maxy]
+    print(f"resample_shapefile|bounds: {bounds}")
+    x_res = 0.01  # Original resolution
+    y_res = 0.01
+    print(f"resample_shapefile|x_res: {x_res}|y_res: {y_res}")
+    print(f"resample_shapefile|width: {(bounds[2] - bounds[0])}")
+    print(f"resample_shapefile|height: {(bounds[3] - bounds[1])}")
+    width = int((bounds[2] - bounds[0]) / x_res)
+    height = int((bounds[3] - bounds[1]) / y_res)
+    print(f"resample_shapefile|width: {width}|height: {height}")
+    transform = from_origin(bounds[0], bounds[3], x_res, y_res)
+
+    # Step 3: Rasterize the shapefile
+    shapes_iter = ((geom, 1) for geom in gdf.geometry)
+    raster = rasterize(
+        shapes_iter,
+        out_shape=(height, width),
+        transform=transform,
+        fill=0,
+        dtype='uint8'
+    )
+
+    # Step 4: Upsample the raster to 10m resolution
+    upsample_factor = 10  # Factor to upsample from 100m to 10m
+    upsampled_raster = zoom(raster, upsample_factor, order=1)  # Bilinear interpolation
+
+    # Step 5: Define new transform for the upsampled raster
+    new_x_res = x_res / upsample_factor
+    new_y_res = y_res / upsample_factor
+    new_transform = from_origin(bounds[0], bounds[3], new_x_res, new_y_res)
+
+    # Step 6: Vectorize the upsampled raster back to polygons
+    polygons = []
+    values = []
+    for geom, value in shapes(upsampled_raster, transform=new_transform):
+        if value > 0:  # Ignore background values
+            polygons.append(shape(geom))
+            values.append(value)
+
+    # Step 7: Create GeoDataFrame for the vectorized polygons
+    vectorized_gdf = gpd.GeoDataFrame(
+        {"geometry": polygons, "value": values}, crs=gdf.crs
+    )
+
+    # Step 8: Save the output to a shapefile
+    vectorized_gdf.to_file(output_shapefile)
+
+    print(f"Upsampled shapefile saved to: {output_shapefile}")
 
 
 def load_cmap(file_path = "config/color_map.json"):
@@ -381,12 +443,14 @@ def compare_with_ground_truth(path, predicted):
 #     clip_tiff(file_path, output_path, geo_json)
 #     view_tiff("data/land_cover/cork/clipped_raster.tif")
 
-if __name__ == "__main__":
-    file_path = "config/color_map.json"
-    # plot_color_map(file_path)
-    plot_color_map_selected(file_path, [112, 131, 211, 231, 243, 311, 312, 313, 324, 999])
-
-
-
 # if __name__ == "__main__":
-#     view_tiff("data/land_cover/selected/selected_area_raster.tif")
+#     file_path = "config/color_map.json"
+#     # plot_color_map(file_path)
+#     plot_color_map_selected(file_path, [112, 131, 211, 231, 243, 311, 312, 313, 324, 999])
+
+if __name__ == "__main__":
+    input_shapefile = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+    output_shapefile = "data/land_cover/cop/resampled_10m/CLC18_IE_wgs84_10m.shp"
+    original_resolution = 100
+    target_resolution = 10
+    resample_shapefile(input_shapefile, output_shapefile, original_resolution, target_resolution)
