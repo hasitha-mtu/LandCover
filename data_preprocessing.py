@@ -329,7 +329,8 @@ if __name__ == "__main__":
 
     shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
     ground_truth = "data/land_cover/selected/area_reference.tiff"
-    geojson_path = "config/smaller_selected_map.geojson"
+    # geojson_path = "config/smaller_selected_map.geojson"
+    geojson_path = "config/crookstown.geojson"
     generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
 
     for input_file in input_files:
