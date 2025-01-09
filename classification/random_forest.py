@@ -1,5 +1,6 @@
 import glob
 from datetime import date
+from email.policy import default
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -12,6 +13,7 @@ from shapely.geometry import Point
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import normalize
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, f1_score, accuracy_score
 
 import data_preprocessing
 import utils
@@ -100,14 +102,27 @@ def train_model(output_path, labels, features):
 
     df = pd.DataFrame()
     df['truth'] = y_test
-    df['predict'] = clf.predict(X_test)
+    y_pred = clf.predict(X_test)
+    df['predict'] = y_pred
     print(pd.crosstab(df['truth'], df['predict'], margins=True))
+
+    conf_matrix = confusion_matrix(y_test, y_pred, labels=clf.classes_)
+    print(f'Confusion matrix: {conf_matrix}')
+    disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix,
+                                  display_labels=clf.classes_)
+    disp.plot()
+    plt.savefig(f"{output_path}/confusion_matrix.png")
+    plt.show()
+
+    score = accuracy_score(y_test, y_pred)
+    print(f'Accuracy score: {score}')
+    f1 = f1_score(y_test, y_pred, average=None)
+    print(f'F1 score: {f1}')
 
     y_predict = clf.predict(X)
     np.savetxt(f"{output_path}/classification_output.csv", y_predict, fmt='%d')
     classified = y_predict.reshape((631, 1524))
     # classified_flipped = np.flip(classified, axis=0)
-    # utils.compare_with_ground_truth(output_path, classified)
     cmap, legend = utils.load_cmap_selected(all_classes, file_path ="../config/color_map.json")
     fig, ax = plt.subplots(figsize=(20, 20))
     ax.legend(**legend)
