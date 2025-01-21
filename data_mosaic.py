@@ -17,6 +17,8 @@ from utils import get_polygon_from_shapefile as get_polygon
 import glob
 from rasterio.plot import show
 from rasterio.merge import merge
+from rasterio.plot import show_hist
+import numpy as np
 
 """
 Explanation on preprocessing for sentinal 2 L2 data
@@ -48,7 +50,7 @@ def merge_file(tiff_paths, output_file, DEBUG):
     with rasterio.open(output_file, mode="w", **merged_meta) as dest:
         dest.write(merged_data)
 
-def mosaic_images(image_paths, output_file, DEBUG):
+def mosaic_images1(image_paths, output_file, DEBUG):
     src_files = [rasterio.open(fp) for fp in image_paths]
     mosaic, out_transform = merge(src_files)
     if DEBUG:
@@ -65,6 +67,62 @@ def mosaic_images(image_paths, output_file, DEBUG):
             pprint(x)
     with rasterio.open(output_file, "w", **out_meta) as dest:
         dest.write(mosaic)
+
+def mosaic_images(image_paths, output_file, DEBUG):
+    print(f"mosaic_images|image_paths: {image_paths}")
+    src_files = [rasterio.open(fp) for fp in image_paths]
+    print(f"mosaic_images|src_files length: {len(src_files)}")
+    print(f"mosaic_images|src_file: {src_files[0]}")
+    src1_data = src_files[0].read()
+    print(f"mosaic_images|src1_data: {src1_data}")
+    print(f"mosaic_images|src1_data shape: {src1_data.shape}")
+    mosaic, out_transform = merge(src_files)
+    if DEBUG:
+        fig, ax = plt.subplots(figsize=(14, 14))
+        show(mosaic, cmap='viridis', ax=ax)
+        plt.show()
+    out_meta = src_files[0].meta.copy()
+    out_meta.update({"driver": "GTiff",
+                      "height": mosaic.shape[1],
+                      "width": mosaic.shape[2],
+                      "transform": out_transform})
+    if DEBUG:
+        check_merge_accuracy(src_files, mosaic)
+    with rasterio.open(output_file, "w", **out_meta) as dest:
+        dest.write(mosaic)
+
+
+def check_merge_accuracy(src_files, mosaic):
+    match src_files:
+        case [src1, src2]:
+            src1_data = src1.read()
+            src2_data = src2.read()
+
+            # Calculate overlapping area
+            overlap_mask = np.logical_and(
+                ~np.all(src1_data == src1.nodata, axis=0),
+                ~np.all(src2_data == src2.nodata, axis=0)
+            )
+
+            # Extract overlapping data
+            src1_overlap = src1_data[:, overlap_mask]
+            src2_overlap = src2_data[:, overlap_mask]
+
+            # Calculate RMSE
+            rmse = np.sqrt(np.mean((src1_overlap - src2_overlap) ** 2))
+            print(f"RMSE: {rmse}")
+
+            # Calculate correlation coefficient
+            corr_coef = np.corrcoef(src1_overlap.flatten(), src2_overlap.flatten())[0, 1]
+            print(f"Correlation Coefficient: {corr_coef}")
+
+            # Plot histograms
+            show_hist(src1, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 1')
+            show_hist(src2, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 2')
+            show_hist(mosaic, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Merged')
+            plt.show()
+        case _:
+            pass
 
 def convert_jp2_to_tiff(path):
     print("Converting " + path)
@@ -236,9 +294,20 @@ if __name__ == "__main__":
     resolution = 10  # Define the target resolution (e.g., 10 meters)
     perform_jp2_to_tiff_conversion(download_dir)
     merge_files(download_dir, resolution, band_list, True)
-    re_project_files(download_dir, resolution)
-    crop_image_files(download_dir, resolution)
-    stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
+
+# if __name__ == "__main__":
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     collection_name = "SENTINEL-2"  # Sentinel satellite
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     # merged_band_dir = f"data/{collection_name}/{today_string}/merged"
+#     band_list = ['AOT', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'SCL',
+#                  'TCI', 'WVP']
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     perform_jp2_to_tiff_conversion(download_dir)
+#     merge_files(download_dir, resolution, band_list, True)
+#     re_project_files(download_dir, resolution)
+#     crop_image_files(download_dir, resolution)
+#     stack_bands_together(download_dir, 10, ['B02', 'B03', 'B04', 'B08', 'B11', 'B12'])
 
 
 
