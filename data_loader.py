@@ -36,7 +36,7 @@ def get_keycloak(username: str, password: str) -> str:
     return r.json()["access_token"]
 
 
-def download_data(download_location, area_foot_print, start_date, end_date,
+def download_data1(download_location, area_foot_print, start_date, end_date,
                   data_collection = "SENTINEL-2"):
     print(
         f"Download data from data_collection: {data_collection} from  {start_date} to {end_date} "
@@ -85,6 +85,55 @@ def download_data(download_location, area_foot_print, start_date, end_date,
             download_image_zip((feature['Id'], download_location))
             # with multiprocessing.Pool() as pool:
             #     pool.map(download_image_zip, [(feature['Id'], download_location)])
+    except Exception as e:
+        print(f"Problem with server error: {e}")
+
+def download_data(download_location, area_foot_print, start_date, end_date,
+                  data_collection = "SENTINEL-2"):
+    print(
+        f"Download data from data_collection: {data_collection} from  {start_date} to {end_date} "
+        f"for the area {area_foot_print}")
+    products_json = requests.get(
+        f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq '{data_collection}' "
+        f"and OData.CSC.Intersects(area=geography'SRID=4326;{area_foot_print}') "
+        f"and ContentDate/Start gt {start_date}T00:00:00.000Z "
+        f"and ContentDate/Start lt {end_date}T00:00:00.000Z&$count=True&$top=1000").json()
+    print(f"products_json : {products_json}")
+
+    product_df = pd.DataFrame.from_dict(products_json['value'])
+    print(f"products_df : {product_df.head()}")
+    if len(product_df.index) == 0:
+        raise Exception("No images for selected period")
+    print(f"header values of product_df: {product_df.columns.values}")
+    product_df = product_df.sort_values(['PublicationDate'], ascending=True)
+    print(f"products_df : {product_df.head()}")
+
+    product_df["geometry"] = product_df["GeoFootprint"].apply(shape)
+    geo_df = gpd.GeoDataFrame(product_df).set_geometry("geometry")  # Convert PD to GPD
+
+    geo_df = geo_df[~geo_df["Name"].str.contains("L1C")]  # Remove L1 data from dataframe
+    geo_df["identifier"] = geo_df["Name"].str.split(".").str[0]
+
+    tile_footprints = []
+    for x in geo_df[["identifier", "Id", "Name", "geometry", "Footprint", "GeoFootprint"]].T.to_dict().items():
+        tile_footprints.append({**x[1], "index": x[0]})
+
+    print(tile_footprints[:3])
+    union_polygons = make_union_polygon(tile_footprints)
+    print(f"union_polygons: {union_polygons}")
+    min_area_polygons = get_min_covering(union_polygons)
+    print(f"min_area_polygons: {min_area_polygons}")
+    try:
+        os.makedirs(download_location, exist_ok=True)
+        for i, feature in enumerate(min_area_polygons):
+            print(f"{i} => {feature}")
+            print(feature['Id'])
+            print(feature['identifier'])
+            print(feature['Name'])
+            print(feature['geometry'])
+            print(feature['Footprint'])
+            print(feature['GeoFootprint'])
+            print(feature['index'])
     except Exception as e:
         print(f"Problem with server error: {e}")
 
@@ -164,9 +213,8 @@ def get_min_covering(union_polygons):
 
 if __name__ == "__main__":
     today = date.today()
-    # today = date.fromisoformat('2024-10-30')
     today_string = today.strftime("%Y-%m-%d")
-    yesterday = today - timedelta(days=1)
+    yesterday = today - timedelta(days=10)
     yesterday_string = yesterday.strftime("%Y-%m-%d")
     selected_area = get_polygon()
     print(f"selected_area : {selected_area}")
@@ -176,7 +224,22 @@ if __name__ == "__main__":
     print(f"download_dir : {download_dir}")
     download_data(download_dir, selected_area, yesterday_string,
                   today_string, data_collection=collection_name)
-    unzip_downloaded_files(download_dir)
+
+# if __name__ == "__main__":
+#     today = date.today()
+#     # today = date.fromisoformat('2024-10-30')
+#     today_string = today.strftime("%Y-%m-%d")
+#     yesterday = today - timedelta(days=1)
+#     yesterday_string = yesterday.strftime("%Y-%m-%d")
+#     selected_area = get_polygon()
+#     print(f"selected_area : {selected_area}")
+#
+#     collection_name = "SENTINEL-2"  # Sentinel satellite
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     print(f"download_dir : {download_dir}")
+#     download_data(download_dir, selected_area, yesterday_string,
+#                   today_string, data_collection=collection_name)
+#     unzip_downloaded_files(download_dir)
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"  # Sentinel satellite
