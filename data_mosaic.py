@@ -80,13 +80,12 @@ def mosaic_images(image_paths, output_file, DEBUG):
                       "height": mosaic.shape[1],
                       "width": mosaic.shape[2],
                       "transform": out_transform})
-    if DEBUG:
-        check_merge_accuracy(src_files, mosaic)
+    check_merge_accuracy(src_files, mosaic, DEBUG)
     with rasterio.open(output_file, "w", **out_meta) as dest:
         dest.write(mosaic)
 
 
-def check_merge_accuracy(src_files, mosaic):
+def check_merge_accuracy(src_files, mosaic, DEBUG):
     match src_files:
         case [src1, src2]:
             src1_data = src1.read()
@@ -106,15 +105,16 @@ def check_merge_accuracy(src_files, mosaic):
             rmse = np.sqrt(np.mean((src1_overlap - src2_overlap) ** 2))
             print(f"RMSE: {rmse}")
 
-            # Calculate correlation coefficient
-            corr_coef = np.corrcoef(src1_overlap.flatten(), src2_overlap.flatten())[0, 1]
-            print(f"Correlation Coefficient: {corr_coef}")
+            if DEBUG:
+                # Calculate correlation coefficient
+                corr_coef = np.corrcoef(src1_overlap.flatten(), src2_overlap.flatten())[0, 1]
+                print(f"Correlation Coefficient: {corr_coef}")
 
-            # Plot histograms
-            show_hist(src1, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 1')
-            show_hist(src2, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 2')
-            show_hist(mosaic, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Merged')
-            plt.show()
+                # Plot histograms
+                show_hist(src1, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 1')
+                show_hist(src2, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 2')
+                show_hist(mosaic, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Merged')
+                plt.show()
         case _:
             pass
 
