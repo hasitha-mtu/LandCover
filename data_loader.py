@@ -89,24 +89,27 @@ def download_data1(download_location, area_foot_print, start_date, end_date,
         print(f"Problem with server error: {e}")
 
 def download_data(download_location, area_foot_print, start_date, end_date,
-                  data_collection = "SENTINEL-2"):
+                  max_cloud_coverage = 40.00, data_collection = "SENTINEL-2"):
     print(
         f"Download data from data_collection: {data_collection} from  {start_date} to {end_date} "
         f"for the area {area_foot_print}")
     products_json = requests.get(
         f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq '{data_collection}' "
         f"and OData.CSC.Intersects(area=geography'SRID=4326;{area_foot_print}') "
+        f"and Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value le {max_cloud_coverage}) " 
         f"and ContentDate/Start gt {start_date}T00:00:00.000Z "
         f"and ContentDate/Start lt {end_date}T00:00:00.000Z&$count=True&$top=1000").json()
     print(f"products_json : {products_json}")
 
     product_df = pd.DataFrame.from_dict(products_json['value'])
     print(f"products_df : {product_df.head()}")
+
     if len(product_df.index) == 0:
         raise Exception("No images for selected period")
     print(f"header values of product_df: {product_df.columns.values}")
-    product_df = product_df.sort_values(['PublicationDate'], ascending=True)
+    product_df = product_df.sort_values(['PublicationDate'], ascending=False)
     print(f"products_df : {product_df.head()}")
+    product_df.to_csv(f"{download_location}/product.csv")
 
     product_df["geometry"] = product_df["GeoFootprint"].apply(shape)
     geo_df = gpd.GeoDataFrame(product_df).set_geometry("geometry")  # Convert PD to GPD
