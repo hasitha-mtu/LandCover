@@ -109,6 +109,7 @@ def download_data(download_location, area_foot_print, start_date, end_date,
     print(f"header values of product_df: {product_df.columns.values}")
     product_df = product_df.sort_values(['PublicationDate'], ascending=False)
     print(f"products_df : {product_df.head()}")
+    os.makedirs(download_location, exist_ok=True)
     product_df.to_csv(f"{download_location}/product.csv")
 
     product_df["geometry"] = product_df["GeoFootprint"].apply(shape)
@@ -127,7 +128,6 @@ def download_data(download_location, area_foot_print, start_date, end_date,
     min_area_polygons = get_min_covering(union_polygons)
     print(f"min_area_polygons: {min_area_polygons}")
     try:
-        os.makedirs(download_location, exist_ok=True)
         for i, feature in enumerate(min_area_polygons):
             print(f"{i} => {feature}")
             print(feature['Id'])
