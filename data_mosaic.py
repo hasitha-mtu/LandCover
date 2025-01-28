@@ -2,6 +2,7 @@ import os
 import os.path
 import re
 from datetime import date
+import platform
 
 import rasterio
 import rasterio.mask
@@ -86,37 +87,37 @@ def mosaic_images(image_paths, output_file, DEBUG):
 
 
 def check_merge_accuracy(src_files, mosaic, DEBUG):
-    match src_files:
-        case [src1, src2]:
-            src1_data = src1.read()
-            src2_data = src2.read()
+    if len(src_files) == 2:
+        [src1, src2] = src_files
+        src1_data = src1.read()
+        src2_data = src2.read()
 
-            # Calculate overlapping area
-            overlap_mask = np.logical_and(
-                ~np.all(src1_data == src1.nodata, axis=0),
-                ~np.all(src2_data == src2.nodata, axis=0)
-            )
+        # Calculate overlapping area
+        overlap_mask = np.logical_and(
+            ~np.all(src1_data == src1.nodata, axis=0),
+            ~np.all(src2_data == src2.nodata, axis=0)
+        )
 
-            # Extract overlapping data
-            src1_overlap = src1_data[:, overlap_mask]
-            src2_overlap = src2_data[:, overlap_mask]
+        # Extract overlapping data
+        src1_overlap = src1_data[:, overlap_mask]
+        src2_overlap = src2_data[:, overlap_mask]
 
-            # Calculate RMSE
-            rmse = np.sqrt(np.mean((src1_overlap - src2_overlap) ** 2))
-            print(f"RMSE: {rmse}")
+        # Calculate RMSE
+        rmse = np.sqrt(np.mean((src1_overlap - src2_overlap) ** 2))
+        print(f"RMSE: {rmse}")
 
-            if DEBUG:
-                # Calculate correlation coefficient
-                corr_coef = np.corrcoef(src1_overlap.flatten(), src2_overlap.flatten())[0, 1]
-                print(f"Correlation Coefficient: {corr_coef}")
+        if DEBUG:
+            # Calculate correlation coefficient
+            corr_coef = np.corrcoef(src1_overlap.flatten(), src2_overlap.flatten())[0, 1]
+            print(f"Correlation Coefficient: {corr_coef}")
 
-                # Plot histograms
-                show_hist(src1, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 1')
-                show_hist(src2, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 2')
-                show_hist(mosaic, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Merged')
-                plt.show()
-        case _:
-            pass
+            # Plot histograms
+            show_hist(src1, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 1')
+            show_hist(src2, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Image 2')
+            show_hist(mosaic, bins=50, histtype='stepfilled', lw=0.0, alpha=0.5, label='Merged')
+            plt.show()
+    else:
+        pass
 
 def convert_jp2_to_tiff(path):
     print("Converting " + path)

@@ -327,7 +327,8 @@ if __name__ == "__main__":
     stack_bands_together(download_dir)
     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
 
-    shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+    # shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+    shapefile_path = "data/land_cover/urban_atlas/UrbanAtlasBBox.shp"
     ground_truth = "data/land_cover/selected/area_reference.tiff"
     # geojson_path = "config/smaller_selected_map.geojson"
     geojson_path = "config/crookstown.geojson"
