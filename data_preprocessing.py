@@ -282,6 +282,10 @@ if __name__ == "__main__":
     resolution = 10  # Define the target resolution (e.g., 10 meters)
     today_string = date.today().strftime("%Y-%m-%d")
     download_dir = f"data/{collection_name}/{today_string}"
+    ground_truth_file = "data/land_cover/selected/area_reference.tiff"
+    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+    resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
     shapefile_path = "data/land_cover/urban_atlas/UrbanAtlasBBox.shp"
     ground_truth = "data/land_cover/selected/area_reference.tiff"
     get_labels(download_dir, shapefile_path, ground_truth)
