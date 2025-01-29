@@ -70,13 +70,15 @@ def train_model1(labels, data_stack, ground_truth_file, output_file):
     ) as dst:
         dst.write(classified, 1)
 
-def train_model(output_path, labels, features):
+def train_model(output_path, labels, features, original_features):
     X = features
+    X1 = original_features
     y = labels
     print(f"train_model|X:{X.shape}")
     print(f"train_model|y:{y.shape}")
 
     X = normalize(X, norm="l2")
+    X1 = normalize(X1, norm="l2")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42,  shuffle=True)
 
     print('All data include {n} classes: {classes}'.format(n=np.unique(y).size,
@@ -119,11 +121,11 @@ def train_model(output_path, labels, features):
     f1 = f1_score(y_test, y_pred, average=None)
     print(f'F1 score: {f1}')
 
-    y_predict = clf.predict(X)
+    y_predict = clf.predict(X1)
     np.savetxt(f"{output_path}/classification_output.csv", y_predict, fmt='%d')
     classified = y_predict.reshape((631, 1524))
     # classified_flipped = np.flip(classified, axis=0)
-    cmap, legend = utils.load_cmap_selected(all_classes, file_path ="../config/color_map.json")
+    cmap, legend = utils.load_cmap_selected(all_classes, file_path ="../config/urban_atlas_color_map.json")
     fig, ax = plt.subplots(figsize=(20, 20))
     ax.legend(**legend)
     rasterio.plot.show(classified, cmap=cmap, ax=ax, title='Land Cover Classification')
@@ -205,7 +207,7 @@ def get_input_dataframe(file_paths, selected, latlon_crs = 'epsg:4326'):
         result_df = pd.merge(result_df, df, how="left", on=["lat", "lon"])
     print(result_df.head())
     print(result_df.shape)
-    input_df = result_df[selected]
+    input_df = result_df[["lat", "lon"]+selected]
     return input_df
 
 def get_input_labels1(shapefile_path, ground_truth):
@@ -275,17 +277,28 @@ if __name__ == "__main__":
     input_files = get_input_files(download_dir)
     print(f"input_files : {input_files}")
     selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDUI", "NDVI", "NDWI"]
-    input_df = get_input_dataframe(input_files, selected_bands)
-    input_df.to_csv(f"{download_dir}/input_features.csv")
+    feature_df = get_input_dataframe(input_files, selected_bands)
+    feature_df.to_csv(f"{download_dir}/input_features.csv")
     label_path = f"{download_dir}/selected_area_labels.csv"
-    input_labels_df = pd.read_csv(label_path, usecols=["CODE_18"])
-    input_labels = input_labels_df["CODE_18"].to_numpy()
-    print(input_df.dtypes)
-    print(f"input_df : {input_df}")
-    print(f"input_df shape : {input_df.shape}")
+    label_df = pd.read_csv(label_path, usecols=["lat","lon","code_2018"])
+    print(f"feature_df shape : {feature_df.shape}")
+    result_df = pd.merge(label_df, feature_df, how="left", on=["lat", "lon"])
+    print(f"result_df shape : {result_df.shape}")
+    result_df = result_df.replace([np.nan, None], np.nan)  # Replace all null representations with NaN
+    result_df.dropna(inplace=True)
+    print(f"filtered result_df shape : {result_df.shape}")
+
+    input_labels = result_df["code_2018"].to_numpy()
+    features = result_df[selected_bands]
+    original_features = feature_df[selected_bands]
+
+    print(f"features : {features}")
+    print(f"features shape : {features.shape}")
     print(f"input_labels : {input_labels}")
     print(f"input_labels shape: {input_labels.shape}")
-    # train_model(download_dir, input_labels, input_df)
+    all_classes = np.unique(input_labels)
+    print(f"all_classes : {all_classes}")
+    train_model(download_dir, input_labels, features, original_features)
 
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
