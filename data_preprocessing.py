@@ -249,6 +249,43 @@ def generate_labels(download_dir, shapefile_path, ground_truth, geojson_path):
     input_labels.to_csv(label_path)
     print(f'generate_labels|file {label_path} created')
 
+def get_labels(download_dir, shapefile_path, ground_truth):
+    gdf = gpd.read_file(shapefile_path)
+    print(f'get_labels|shapefile shape:{gdf.shape}')
+    print(f'get_labels|gdf columns:{gdf.columns.values}')
+    df = get_data_frame(ground_truth)
+    print(f'get_labels|ground_truth shape:{df.shape}')
+    print(f'get_labels|df columns:{df.columns.values}')
+    gdf_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['lat'], df['lon']), crs="EPSG:4326")
+    joined_df = gpd.sjoin(gdf_points, gdf, how='left', predicate='within')
+    joined_df.to_csv(f"{download_dir}/joined_df.csv")
+    polygon = get_polygon()
+    valid = 0
+    invalid = 0
+    for i, row in joined_df.iterrows():
+        point = Point(row['lat'], row['lon'])
+        if not polygon.contains(point):
+            invalid+=1
+            joined_df.at[i, 'code_2018'] = 999
+        else:
+            valid+=1
+    print(f'get_labels|total:{valid+invalid}|invalid count:{invalid}|valid count:{valid}')
+    joined_df.dropna(subset=['code_2018'], inplace=True)
+    joined_df[["lat", "lon", "value", "code_2018"]].to_csv(f"{download_dir}/joined_filtered_df.csv")
+    label_path = f"{download_dir}/selected_area_labels.csv"
+    input_labels = joined_df[["lat", "lon", "value", "code_2018"]]
+    input_labels.to_csv(label_path)
+    print(f'get_labels|file {label_path} created')
+
+if __name__ == "__main__":
+    collection_name = "SENTINEL-2"
+    resolution = 10  # Define the target resolution (e.g., 10 meters)
+    today_string = date.today().strftime("%Y-%m-%d")
+    download_dir = f"data/{collection_name}/{today_string}"
+    shapefile_path = "data/land_cover/urban_atlas/UrbanAtlasBBox.shp"
+    ground_truth = "data/land_cover/selected/area_reference.tiff"
+    get_labels(download_dir, shapefile_path, ground_truth)
+
 # if __name__ == "__main__":
 #     collection_name = "SENTINEL-2"
 #     resolution = 10  # Define the target resolution (e.g., 10 meters)
@@ -313,29 +350,30 @@ def generate_labels(download_dir, shapefile_path, ground_truth, geojson_path):
 
 
 
-if __name__ == "__main__":
-    collection_name = "SENTINEL-2"
-    resolution = 10  # Define the target resolution (e.g., 10 meters)
-    today_string = date.today().strftime("%Y-%m-%d")
-    download_dir = f"data/{collection_name}/{today_string}"
-    bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
-    features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
-    # get_input_files(download_dir, resolution, bands, features)
-    # ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
-    ground_truth_file = "data/land_cover/selected/area_reference.tiff"
-    resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
-    stack_bands_together(download_dir)
-    input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
-
-    shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
-    ground_truth = "data/land_cover/selected/area_reference.tiff"
-    # geojson_path = "config/smaller_selected_map.geojson"
-    geojson_path = "config/crookstown.geojson"
-    generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
-
-    for input_file in input_files:
-        with rasterio.open(input_file) as src:
-            image_data = src.read()
-            image_shape = image_data.shape
-            print(f"get_input_files|input_file:{input_file}")
-            print(f"get_input_files|image_shape:{image_shape}")
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today_string = date.today().strftime("%Y-%m-%d")
+#     download_dir = f"data/{collection_name}/{today_string}"
+#     bands = ['B02', 'B03', 'B04', 'B08', 'B11', 'B12']
+#     features = ['NDVI', 'NDWI', 'NDBI', 'NDUI', 'NDDI']
+#     # get_input_files(download_dir, resolution, bands, features)
+#     # ground_truth_file = "data/land_cover/selected/selected_area_raster.tif"
+#     ground_truth_file = "data/land_cover/selected/area_reference.tiff"
+#     resample_and_align_images(download_dir, resolution, bands, features, ground_truth_file)
+#     stack_bands_together(download_dir)
+#     input_files = glob.glob(f"{download_dir}/aligned/*.tiff")
+#
+#     shapefile_path = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+#     ground_truth = "data/land_cover/selected/area_reference.tiff"
+#     # geojson_path = "config/smaller_selected_map.geojson"
+#     geojson_path = "config/crookstown.geojson"
+#     # generate_labels(download_dir, shapefile_path, ground_truth, geojson_path)
+#     get_labels(download_dir, shapefile_path, ground_truth)
+#
+#     for input_file in input_files:
+#         with rasterio.open(input_file) as src:
+#             image_data = src.read()
+#             image_shape = image_data.shape
+#             print(f"get_input_files|input_file:{input_file}")
+#             print(f"get_input_files|image_shape:{image_shape}")

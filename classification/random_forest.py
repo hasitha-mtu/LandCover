@@ -205,7 +205,6 @@ def get_input_dataframe(file_paths, selected, latlon_crs = 'epsg:4326'):
         result_df = pd.merge(result_df, df, how="left", on=["lat", "lon"])
     print(result_df.head())
     print(result_df.shape)
-    result_df.to_csv("../data/land_cover/selected/total_df.csv")
     input_df = result_df[selected]
     return input_df
 
@@ -275,12 +274,8 @@ if __name__ == "__main__":
     download_dir = f"../data/{collection_name}/{today_string}"
     input_files = get_input_files(download_dir)
     print(f"input_files : {input_files}")
-    # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
     selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDUI", "NDVI", "NDWI"]
-    # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m"]
-    # selected_bands = ["NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
     input_df = get_input_dataframe(input_files, selected_bands)
-    input_df.to_csv("../data/land_cover/selected/input_features.csv")
     input_df.to_csv(f"{download_dir}/input_features.csv")
     label_path = f"{download_dir}/selected_area_labels.csv"
     input_labels_df = pd.read_csv(label_path, usecols=["CODE_18"])
@@ -290,7 +285,31 @@ if __name__ == "__main__":
     print(f"input_df shape : {input_df.shape}")
     print(f"input_labels : {input_labels}")
     print(f"input_labels shape: {input_labels.shape}")
-    train_model(download_dir, input_labels, input_df)
+    # train_model(download_dir, input_labels, input_df)
+
+# if __name__ == "__main__":
+#     collection_name = "SENTINEL-2"
+#     resolution = 10  # Define the target resolution (e.g., 10 meters)
+#     today = date.today()
+#     today_string = today.strftime("%Y-%m-%d")
+#     download_dir = f"../data/{collection_name}/{today_string}"
+#     input_files = get_input_files(download_dir)
+#     print(f"input_files : {input_files}")
+#     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
+#     selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m", "NDBI", "NDUI", "NDVI", "NDWI"]
+#     # selected_bands = ["B02_10m", "B03_10m", "B04_10m", "B08_10m", "B11_10m", "B12_10m"]
+#     # selected_bands = ["NDBI", "NDDI", "NDUI", "NDVI", "NDWI"]
+#     input_df = get_input_dataframe(input_files, selected_bands)
+#     input_df.to_csv(f"{download_dir}/input_features.csv")
+#     label_path = f"{download_dir}/selected_area_labels.csv"
+#     input_labels_df = pd.read_csv(label_path, usecols=["CODE_18"])
+#     input_labels = input_labels_df["CODE_18"].to_numpy()
+#     print(input_df.dtypes)
+#     print(f"input_df : {input_df}")
+#     print(f"input_df shape : {input_df.shape}")
+#     print(f"input_labels : {input_labels}")
+#     print(f"input_labels shape: {input_labels.shape}")
+#     train_model(download_dir, input_labels, input_df)
 
 
 # if __name__ == "__main__":
