@@ -88,9 +88,9 @@ def train_model(output_path, labels, features, original_features):
                                                                     classes=np.unique(y_train)))
     print('Test data include {n} classes: {classes}'.format(n=np.unique(y_test).size,
                                                                     classes=np.unique(y_test)))
-
+    cmap, legend = utils.load_cmap_selected(all_classes, file_path="../config/urban_atlas_color_map.json")
     clf = RandomForestClassifier(
-        n_estimators=5000,
+        n_estimators=500,
         criterion="gini",
         random_state=42,
         n_jobs=10,
@@ -125,7 +125,7 @@ def train_model(output_path, labels, features, original_features):
     np.savetxt(f"{output_path}/classification_output.csv", y_predict, fmt='%d')
     classified = y_predict.reshape((631, 1524))
     # classified_flipped = np.flip(classified, axis=0)
-    cmap, legend = utils.load_cmap_selected(all_classes, file_path ="../config/urban_atlas_color_map.json")
+
     fig, ax = plt.subplots(figsize=(20, 20))
     ax.legend(**legend)
     rasterio.plot.show(classified, cmap=cmap, ax=ax, title='Land Cover Classification')

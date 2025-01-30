@@ -105,8 +105,9 @@ def load_cmap(file_path = "config/color_map.json"):
     return cmap, legend
 
 def load_cmap_selected(picked, file_path = "config/color_map.json"):
-    # Color map is https://collections.sentinel-hub.com/corine-land-cover/readme.html
+    print(f"load_cmap_selected|picked:{picked}")
     lc = json.load(open(file_path))
+    print(f"load_cmap_selected|lc:{lc}")
     lc_df = pd.DataFrame(lc)
     lc_df = lc_df.loc[lc_df['values'].isin(picked)]
     values = lc_df["values"].to_list()
