@@ -391,6 +391,13 @@ def compare_with_ground_truth(path, predicted):
         plt.savefig(f"{path}/classification_output.png")
         plt.show()
 
+def covert_crs_of_shapefile(input_file, output_file, crs = 4326):
+    gdf = gpd.read_file(input_file)
+    print(f"Current CRS: {gdf.crs}")
+    gdf = gdf.to_crs(epsg=crs)
+    gdf.to_file(output_file)
+    print("Coordinate system converted successfully")
+
 # if __name__ == "__main__":
 #     file_path = "data/land_cover/cork/clipped_raster.tif"
 #     read_raster(file_path)
@@ -448,10 +455,18 @@ def compare_with_ground_truth(path, predicted):
 #     file_path = "config/color_map.json"
 #     # plot_color_map(file_path)
 #     plot_color_map_selected(file_path, [112, 131, 211, 231, 243, 311, 312, 313, 324, 999])
+#
+# if __name__ == "__main__":
+#     input_shapefile = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
+#     output_shapefile = "data/land_cover/cop/resampled_10m/CLC18_IE_wgs84_10m.shp"
+#     original_resolution = 100
+#     target_resolution = 10
+#     resample_shapefile(input_shapefile, output_shapefile, original_resolution, target_resolution)
 
 if __name__ == "__main__":
-    input_shapefile = "data/land_cover/cop/CLC18_IE_wgs84/CLC18_IE_wgs84.shp"
-    output_shapefile = "data/land_cover/cop/resampled_10m/CLC18_IE_wgs84_10m.shp"
-    original_resolution = 100
-    target_resolution = 10
-    resample_shapefile(input_shapefile, output_shapefile, original_resolution, target_resolution)
+    ""
+    # input_shapefile = "C:\\Users\AdikariAdikari\DataCollection\catchments\crookstown\Crookstown_subbasin_all.shp"
+    input_shapefile = "C:\\Users\AdikariAdikari\DataCollection\catchments\owenabue\Owenabue_all_subbasins_proj.shp"
+    # output_shapefile = "config/wgs84/crookstown/crookstown.shp"
+    output_shapefile = "config/wgs84/owenabue/owenabue.shp"
+    covert_crs_of_shapefile(input_shapefile, output_shapefile)
